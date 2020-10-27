@@ -1,5 +1,6 @@
 from antlr4 import InputStream, CommonTokenStream
-from luaparser.parser.LuaLexer import LuaLexer
+#from luaparser.parser.LuaLexer import LuaLexer
+from luaparser.parser.PartDSLLexer import PartDSLLexer as LuaLexer
 from luaparser.astnodes import *
 from enum import Enum
 import ast
@@ -31,82 +32,96 @@ class Expr(Enum):
 
 
 class Tokens:
-    AND = 1
-    BREAK = 2
-    DO = 3
-    ELSETOK = 4
-    ELSEIF = 5
-    END = 6
-    FALSE = 7
-    FOR = 8
-    FUNCTION = 9
-    GOTO = 10
-    IFTOK = 11
-    IN = 12
-    LOCAL = 13
-    NIL = 14
-    NOT = 15
-    OR = 16
-    REPEAT = 17
-    RETURN = 18
-    THEN = 19
-    TRUE = 20
-    UNTIL = 21
-    WHILE = 22
-    ADD = 23
-    MINUS = 24
-    MULT = 25
-    DIV = 26
-    FLOOR = 27
-    MOD = 28
-    POW = 29
-    LENGTH = 30
-    EQ = 31
-    NEQ = 32
-    LTEQ = 33
-    GTEQ = 34
-    LT = 35
-    GT = 36
-    ASSIGN = 37
-    BITAND = 38
-    BITOR = 39
-    BITNOT = 40
-    BITRSHIFT = 41
-    BITRLEFT = 42
-    OPAR = 43
-    CPAR = 44
-    OBRACE = 45
-    CBRACE = 46
-    OBRACK = 47
-    CBRACK = 48
-    COLCOL = 49
-    COL = 50
-    COMMA = 51
-    VARARGS = 52
-    CONCAT = 53
-    DOT = 54
-    SEMCOL = 55
-    NAME = 56
-    NUMBER = 57
-    STRING = 58
-    COMMENT = 59
-    LINE_COMMENT = 60
-    SPACE = 61
-    NEWLINE = 62
-    SHEBANG = 63
-    LongBracket = 64
+    AND=1
+    ASYM_PAIRWISE_KERNEL=2
+    BREAK=3
+    DO=4
+    ELSETOK=5
+    ELSEIF=6
+    END=7
+    FALSE=8
+    FOR=9
+    FUNCTION=10
+    GOTO=11
+    IFTOK=12
+    IN=13
+    LOCAL=14
+    KERNEL=15
+    NIL=16
+    NOT=17
+    OR=18
+    REPEAT=19
+    RETURN=20
+    SYM_PAIRWISE_KERNEL=21
+    THEN=22
+    TRUE=23
+    UNTIL=24
+    WHILE=25
+    ADD=26
+    MINUS=27
+    MULT=28
+    DIV=29
+    FLOOR=30
+    MOD=31
+    POW=32
+    LENGTH=33
+    EQ=34
+    NEQ=35
+    LTEQ=36
+    GTEQ=37
+    LT=38
+    GT=39
+    ASSIGN=40
+    BITAND=41
+    BITOR=42
+    BITNOT=43
+    BITRSHIFT=44
+    BITRLEFT=45
+    OPAR=46
+    CPAR=47
+    OBRACE=48
+    CBRACE=49
+    OBRACK=50
+    CBRACK=51
+    COLCOL=52
+    COL=53
+    COMMA=54
+    VARARGS=55
+    CONCAT=56
+    DOT=57
+    SEMCOL=58
+    NAME=59
+    NUMBER=60
+    STRING=61
+    COMMENT=62
+    LINE_COMMENT=63
+    SPACE=64
+    NEWLINE=65
+    SHEBANG=66
+    LongBracket=67
 
 
-LITERAL_NAMES = ["<INVALID>",
-                 "'and'", "'break'", "'do'", "'else'", "'elseif'", "'end'", "'false'",
-                 "'for'", "'function'", "'goto'", "'if'", "'in'", "'local'",
-                 "'nil'", "'not'", "'or'", "'repeat'", "'return'", "'then'",
-                 "'true'", "'until'", "'while'", "'+'", "'-'", "'*'", "'/'",
-                 "'//'", "'%'", "'^'", "'#'", "'=='", "'~='", "'<='", "'>='",
-                 "'<'", "'>'", "'='", "'&'", "'|'", "'~'", "'>>'", "'<<'", "'('",
-                 "')'", "'{'", "'}'", "'['", "']'", "'::'", "':'", "','", "'...'",
-                 "'..'", "'.'", "';'", "NAME", "NUMBER", "STRING", "COMMENT", "LINE_COMMENT",
-                 "SPACE", "NEWLINE", "SHEBANG", "LONG_BRACKET"]
+#LITERAL_NAMES = ["<INVALID>",
+#                 "'and'", "'break'", "'do'", "'else'", "'elseif'", "'end'", "'false'",
+#                 "'for'", "'function'", "'goto'", "'if'", "'in'", "'local'",
+#                 "'nil'", "'not'", "'or'", "'repeat'", "'return'", "'then'",
+#                 "'true'", "'until'", "'while'", "'+'", "'-'", "'*'", "'/'",
+#                 "'//'", "'%'", "'^'", "'#'", "'=='", "'~='", "'<='", "'>='",
+#                 "'<'", "'>'", "'='", "'&'", "'|'", "'~'", "'>>'", "'<<'", "'('",
+#                 "')'", "'{'", "'}'", "'['", "']'", "'::'", "':'", "','", "'...'",
+#                 "'..'", "'.'", "';'", "NAME", "NUMBER", "STRING", "COMMENT", "LINE_COMMENT",
+#                 "SPACE", "NEWLINE", "SHEBANG", "LONG_BRACKET"]
+
+LITERAL_NAMES = [ "<INVALID>",
+                  "'and'", "'asym_pairwise_kernel'", "'break'", "'do'", "'else'",
+                  "'elseif'", "'end'", "'false'", "'for'", "'function'", "'goto'",
+                  "'if'", "'in'", "'local'", "'kernel'", "'nil'", "'not'", "'or'",
+                  "'repeat'", "'return'", "'sym_pairwise_kernel'", "'then'", "'true'",
+                  "'until'", "'while'", "'+'", "'-'", "'*'", "'/'", "'//'", "'%'",
+                  "'^'", "'#'", "'=='", "'~='", "'<='", "'>='", "'<'", "'>'",
+                  "'='", "'&'", "'|'", "'~'", "'>>'", "'<<'", "'('", "')'", "'{'",
+                  "'}'", "'['", "']'", "'::'", "':'", "','", "'...'", "'..'",
+                  "'.'", "';'" ]
 
 
 def _listify(obj):
@@ -162,7 +177,6 @@ class Builder:
 
     def process(self) -> Chunk:
         node = self.parse_chunk()
-
         if not node:
             raise SyntaxException("Expecting a chunk")
         return node
@@ -387,6 +401,9 @@ class Builder:
             self.parse_if_stat() or \
             self.parse_for_stat() or \
             self.parse_function() or \
+            self.parse_kernel() or \
+            self.parse_symmetric_pairwise_kernel() or \
+            self.parse_asymmetric_pairwise_kernel() or \
             self.parse_label()
 
         if stat:
@@ -797,6 +814,109 @@ class Builder:
             self.abort()
 
         return self.failure()
+
+    def parse_kernel(self) -> Method or Function or bool:
+        self.save()
+        self._expected = []
+        start_token = self.next_is_rc(Tokens.KERNEL)
+        if start_token:
+            names = self.parse_names()
+            if names:
+                self.save()
+                if self.next_is_rc(Tokens.COL) and self.next_is_rc(Tokens.NAME):
+                    name = Name(self.text)
+                    func_body = self.parse_func_body()
+                    if func_body:
+                        self.success()
+                        self.success()
+                        node = Method(names, name, func_body[0], func_body[1])
+                        self.handle_hidden_right()
+                        node.start_char = start_token.start
+                        node.stop_char = func_body[1].stop_char
+                        return node
+
+                self.failure()
+
+                func_body = self.parse_func_body()
+                if func_body:
+                    self.success()
+                    node = Kernel(names, func_body[0], func_body[1])
+                    self.handle_hidden_right()
+                    node.start_char = start_token.start
+                    node.stop_char = func_body[1].stop_char
+                    return node
+            self.abort()
+
+        return self.failure()
+
+    def parse_symmetric_pairwise_kernel(self) -> Method or Function or bool:
+        self.save()
+        self._expected = []
+        start_token = self.next_is_rc(Tokens.SYM_PAIRWISE_KERNEL)
+        if start_token:
+            names = self.parse_names()
+            if names:
+                self.save()
+                if self.next_is_rc(Tokens.COL) and self.next_is_rc(Tokens.NAME):
+                    name = Name(self.text)
+                    func_body = self.parse_func_body()
+                    if func_body:
+                        self.success()
+                        self.success()
+                        node = Method(names, name, func_body[0], func_body[1])
+                        self.handle_hidden_right()
+                        node.start_char = start_token.start
+                        node.stop_char = func_body[1].stop_char
+                        return node
+
+                self.failure()
+
+                func_body = self.parse_func_body()
+                if func_body:
+                    self.success()
+                    node = Symmetric_Pairwise_Kernel(names, func_body[0], func_body[1])
+                    self.handle_hidden_right()
+                    node.start_char = start_token.start
+                    node.stop_char = func_body[1].stop_char
+                    return node
+            self.abort()
+
+        return self.failure()
+
+    def parse_asymmetric_pairwise_kernel(self) -> Method or Function or bool:
+        self.save()
+        self._expected = []
+        start_token = self.next_is_rc(Tokens.ASYM_PAIRWISE_KERNEL)
+        if start_token:
+            names = self.parse_names()
+            if names:
+                self.save()
+                if self.next_is_rc(Tokens.COL) and self.next_is_rc(Tokens.NAME):
+                    name = Name(self.text)
+                    func_body = self.parse_func_body()
+                    if func_body:
+                        self.success()
+                        self.success()
+                        node = Method(names, name, func_body[0], func_body[1])
+                        self.handle_hidden_right()
+                        node.start_char = start_token.start
+                        node.stop_char = func_body[1].stop_char
+                        return node
+
+                self.failure()
+
+                func_body = self.parse_func_body()
+                if func_body:
+                    self.success()
+                    node = Asymmetric_Pairwise_Kernel(names, func_body[0], func_body[1])
+                    self.handle_hidden_right()
+                    node.start_char = start_token.start
+                    node.stop_char = func_body[1].stop_char
+                    return node
+            self.abort()
+
+        return self.failure()
+
 
     def parse_names(self) -> Name or Index or bool:
         self.save()

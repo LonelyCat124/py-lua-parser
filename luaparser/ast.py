@@ -1,5 +1,6 @@
 from antlr4 import InputStream, CommonTokenStream
-from luaparser.parser.LuaLexer import LuaLexer
+#from luaparser.parser.LuaLexer import LuaLexer
+from luaparser.parser.PartDSLLexer import PartDSLLexer as LuaLexer
 from luaparser.astnodes import *
 from luaparser import printers
 from luaparser.builder import Builder
@@ -37,6 +38,8 @@ def walk(root: Node) -> Generator[None, Node, None]:
 def to_pretty_str(root: Node, indent=2) -> str:
     return printers.PythonStyleVisitor(indent).visit(root)
 
+def to_lua_str(root: Node, indent=4) -> str:
+    return printers.RegentStyleVisitor(indent).visit(root)
 
 def to_xml_str(tree):
     tree_visitor = printers.HTMLStyleVisitor()

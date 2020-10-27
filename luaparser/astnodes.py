@@ -44,6 +44,12 @@ class Node:
     def to_json(self) -> any:
         return {self._name: {k: v for k, v in self.__dict__.items() if not k.startswith('_') and v}}
 
+    def to_regent(self, indent) -> str:
+        return "NYI"
+    
+    def to_regent_post(self, indent) -> str:
+        return ""
+
 
 class Comment(Node):
     def __init__(self, s: str, is_multi_line: bool = False):
@@ -77,6 +83,9 @@ class Block(Node):
         super(Block, self).__init__('Block')
         self.body: List[Statement] = body
 
+    def to_regent(self, indent) -> str:
+        return ""
+
 
 class Chunk(Node):
     """Define a Lua chunk.
@@ -88,6 +97,9 @@ class Chunk(Node):
     def __init__(self, body: Block, comments: Comments = None):
         super(Chunk, self).__init__('Chunk', comments)
         self.body = body
+
+    def to_regent(self, indent) -> str:
+        return ""
 
 
 '''
@@ -112,6 +124,8 @@ class Name(Lhs):
         super(Name, self).__init__('Name')
         self.id: str = identifier
 
+    def to_regent(self, indent) -> str:
+        return " " + self.id + " "
 
 class Index(Lhs):
     """Define a Lua index expression.
@@ -367,6 +381,56 @@ class Function(Statement):
         self.args: List[Expression] = args
         self.body: Block = body
 
+class Kernel(Statement):
+    """Define the RegentParticleDSL Kernel declaration statement.
+
+	Attributes:
+        name (`Expression`): Function name.
+        args (`list<Expression>`): Function arguments.
+        body (`Block`): List of statements to execute.
+    """
+    def __init__(self, name: Expression, args: List[Expression], body: Block):
+        super(Kernel, self).__init__('Kernel')
+        self.name: Expression = name
+        self.args: List[Expression] = args
+        self.body: Block = body
+
+class Symmetric_Pairwise_Kernel(Statement):
+    """Define the RegentParticleDSL Symmetric Pairwise Kernel declaration statement.
+
+	Attributes:
+        name (`Expression`): Function name.
+        args (`list<Expression>`): Function arguments.
+        body (`Block`): List of statements to execute.
+    """
+    def __init__(self, name: Expression, args: List[Expression], body: Block):
+        super(Symmetric_Pairwise_Kernel, self).__init__('Symmetric_Pairwise_Kernel')
+        self.name: Expression = name
+        self.args: List[Expression] = args
+        self.body: Block = body
+
+    def to_regent(self, indent) -> str:
+        RegentString = ' '*indent + f"function"
+#        RegentString = ' '*indent + f"function {self.name.to_regent(0)}({self.args})\n" + ' '*(indent*2) + "return rexpr\n"
+        return RegentString
+
+    def to_regent_post(self, indent) -> str:
+        RegentString = ' '*indent + "end"
+        return RegentString
+
+class Asymmetric_Pairwise_Kernel(Statement):
+    """Define the RegentParticleDSL Asymmetric Pairwise Kernel declaration statement.
+
+	Attributes:
+        name (`Expression`): Function name.
+        args (`list<Expression>`): Function arguments.
+        body (`Block`): List of statements to execute.
+    """
+    def __init__(self, name: Expression, args: List[Expression], body: Block):
+        super(Asymmetric_Pairwise_Kernel, self).__init__('Asymmetric_Pairwise_Kernel')
+        self.name: Expression = name
+        self.args: List[Expression] = args
+        self.body: Block = body
 
 class LocalFunction(Statement):
     """Define the Lua local function declaration statement.
