@@ -290,7 +290,7 @@ class RegentStyleVisitor:
             raise WrongNumberOfArgsError()
         res += " )"
         res += "\n"
-        res += "return rexpr\n\n"
+        res += "return rquote\n\n"
         ##We know how many arguments the Kernel should have, so we can explicitly check that here.
         ##We know the format of the body should be a set of statements, followed by end
         ##We need to add
@@ -322,7 +322,7 @@ class RegentStyleVisitor:
             raise WrongNumberOfArgsError()
         res += " )"
         res += "\n"
-        res += "return rexpr\n\n"
+        res += "return rquote\n\n"
         ##We know how many arguments the Kernel should have, so we can explicitly check that here.
         ##We know the format of the body should be a set of statements, followed by end
         ##We need to add
@@ -351,7 +351,7 @@ class RegentStyleVisitor:
             raise WrongNumberOfArgsError()
         res += " )"
         res += "\n"
-        res += "return rexpr\n\n"
+        res += "return rquote\n\n"
         ##We know how many arguments the Kernel should have, so we can explicitly check that here.
         ##We know the format of the body should be a set of statements, followed by end
         ##We need to add
