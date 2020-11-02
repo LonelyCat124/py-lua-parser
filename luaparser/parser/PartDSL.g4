@@ -56,6 +56,7 @@ stat
   | kernel
   | sym_pairwise_kernel
   | asym_pairwise_kernel
+  | particle_type
   | label
   | BREAK
   | SEMCOL
@@ -120,6 +121,31 @@ sym_pairwise_kernel
 
 asym_pairwise_kernel
   : ASYM_PAIRWISE_KERNEL names (COL NAME func_body | func_body)
+  ;
+
+particle_type
+  : PART_TYPE OBRACE fspace_list? CBRACE
+  ;
+
+fspace_list
+  : fspace (COMMA fspace) COMMA?
+  ;
+
+fspace
+  : NAME COL regent_type
+  ;
+
+regent_type
+  : INT
+  | INT32
+  | INT64
+  | UINT32
+  | UINT64
+  | FLOAT
+  | DOUBLE
+  | INT1D
+  | INT2D
+  | INT3D
   ;
 
 names
@@ -274,6 +300,7 @@ KERNEL    : 'kernel';
 NIL       : 'nil';
 NOT       : 'not';
 OR        : 'or';
+PART_TYPE : 'part_type';
 REPEAT    : 'repeat';
 RETURN    : 'return';
 SYM_PAIRWISE_KERNEL : 'sym_pairwise_kernel';
@@ -313,7 +340,18 @@ COMMA     : ',';
 VARARGS   : '...';
 CONCAT    : '..';
 DOT       : '.';
-SEMCOL     : ';';
+SEMCOL    : ';';
+INT       : 'int';
+UINT      : 'uint';
+INT32     : 'int32';
+UINT32    : 'uint32';
+INT64     : 'int64';
+UINT64    : 'uint64';
+FLOAT     : 'float';
+DOUBLE    : 'double';
+INT1D     : 'int1d';
+INT2D     : 'int2d';
+INT3D     : 'int3d';
 
 NAME
   : (Letter | '_') (Letter | '_' | Digit)*

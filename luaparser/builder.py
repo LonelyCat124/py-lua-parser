@@ -50,55 +50,67 @@ class Tokens:
     NIL=16
     NOT=17
     OR=18
-    REPEAT=19
-    RETURN=20
-    SYM_PAIRWISE_KERNEL=21
-    THEN=22
-    TRUE=23
-    UNTIL=24
-    WHILE=25
-    ADD=26
-    MINUS=27
-    MULT=28
-    DIV=29
-    FLOOR=30
-    MOD=31
-    POW=32
-    LENGTH=33
-    EQ=34
-    NEQ=35
-    LTEQ=36
-    GTEQ=37
-    LT=38
-    GT=39
-    ASSIGN=40
-    BITAND=41
-    BITOR=42
-    BITNOT=43
-    BITRSHIFT=44
-    BITRLEFT=45
-    OPAR=46
-    CPAR=47
-    OBRACE=48
-    CBRACE=49
-    OBRACK=50
-    CBRACK=51
-    COLCOL=52
-    COL=53
-    COMMA=54
-    VARARGS=55
-    CONCAT=56
-    DOT=57
-    SEMCOL=58
-    NAME=59
-    NUMBER=60
-    STRING=61
-    COMMENT=62
-    LINE_COMMENT=63
-    SPACE=64
-    NEWLINE=65
-    SHEBANG=66
-    LongBracket=67
+    PART_TYPE=19
+    REPEAT=20
+    RETURN=21
+    SYM_PAIRWISE_KERNEL=22
+    THEN=23
+    TRUE=24
+    UNTIL=25
+    WHILE=26
+    ADD=27
+    MINUS=28
+    MULT=29
+    DIV=30
+    FLOOR=31
+    MOD=32
+    POW=33
+    LENGTH=34
+    EQ=35
+    NEQ=36
+    LTEQ=37
+    GTEQ=38
+    LT=39
+    GT=40
+    ASSIGN=41
+    BITAND=42
+    BITOR=43
+    BITNOT=44
+    BITRSHIFT=45
+    BITRLEFT=46
+    OPAR=47
+    CPAR=48
+    OBRACE=49
+    CBRACE=50
+    OBRACK=51
+    CBRACK=52
+    COLCOL=53
+    COL=54
+    COMMA=55
+    VARARGS=56
+    CONCAT=57
+    DOT=58
+    SEMCOL=59
+    INT=60
+    UINT=61
+    INT32=62
+    UINT32=63
+    INT64=64
+    UINT64=65
+    FLOAT=66
+    DOUBLE=67
+    INT1D=68
+    INT2D=69
+    INT3D=70
+    NAME=71
+    NUMBER=72
+    STRING=73
+    COMMENT=74
+    LINE_COMMENT=75
+    SPACE=76
+    NEWLINE=77
+    SHEBANG=78
+    LongBracket=79
 
 
 #LITERAL_NAMES = ["<INVALID>",
@@ -112,17 +124,19 @@ class Tokens:
 #                 "'..'", "'.'", "';'", "NAME", "NUMBER", "STRING", "COMMENT", "LINE_COMMENT",
 #                 "SPACE", "NEWLINE", "SHEBANG", "LONG_BRACKET"]
 
-LITERAL_NAMES = [ "<INVALID>",
-                  "'and'", "'asym_pairwise_kernel'", "'break'", "'do'", "'else'",
-                  "'elseif'", "'end'", "'false'", "'for'", "'function'", "'goto'",
-                  "'if'", "'in'", "'local'", "'kernel'", "'nil'", "'not'", "'or'",
-                  "'repeat'", "'return'", "'sym_pairwise_kernel'", "'then'", "'true'",
-                  "'until'", "'while'", "'+'", "'-'", "'*'", "'/'", "'//'", "'%'",
-                  "'^'", "'#'", "'=='", "'~='", "'<='", "'>='", "'<'", "'>'",
-                  "'='", "'&'", "'|'", "'~'", "'>>'", "'<<'", "'('", "')'", "'{'",
-                  "'}'", "'['", "']'", "'::'", "':'", "','", "'...'", "'..'",
-                  "'.'", "';'" ]
-
+LITERAL_NAMES = [ "<INVALID>", "'and'", "'asym_pairwise_kernel'", "'break'",
+                     "'do'", "'else'", "'elseif'", "'end'", "'false'", "'for'",
+                     "'function'", "'goto'", "'if'", "'in'", "'local'",
+                     "'kernel'", "'nil'", "'not'", "'or'", "'part_type'",
+                     "'repeat'", "'return'", "'sym_pairwise_kernel'", "'then'",
+                     "'true'", "'until'", "'while'", "'+'", "'-'", "'*'",
+                     "'/'", "'//'", "'%'", "'^'", "'#'", "'=='", "'~='",
+                     "'<='", "'>='", "'<'", "'>'", "'='", "'&'", "'|'",
+                     "'~'", "'>>'", "'<<'", "'('", "')'", "'{'", "'}'",
+                     "'['", "']'", "'::'", "':'", "','", "'...'", "'..'",
+                     "'.'", "';'", "'int'", "'uint'", "'int32'", "'uint32'",
+                     "'int64'", "'uint64'", "'float'", "'double'", "'int1d'",
+                     "'int2d'", "'int3d'" ]
 
 def _listify(obj):
     if not isinstance(obj, list):
