@@ -52,39 +52,14 @@ class RegentStyleVisitor:
     def dedent(self):
         self.currentIndent -= self.indentValue
 
-    @staticmethod
-    def pretty_count(node, is_list=False):
-        res = ''
-        if isinstance(node, list):
-            item_count = len(node)
-            res += '[] ' + str(item_count) + ' '
-            if item_count > 1:
-                res += 'items'
-            else:
-                res += 'item'
-        elif isinstance(node, Node):
-            if is_list:
-                return '{} 1 key'
-            key_count = len([attr for attr in node.__dict__.keys() if not attr.startswith("_")])
-            res += '{} ' + str(key_count) + ' '
-            if key_count > 1:
-                res += 'keys'
-            else:
-                res += 'key'
-        else:
-            res += '[unknow]'
-        return res
-
     @visitor(list)
     def visit(self, obj):
         res = ''
         k = 0
         for itemValue in obj:
-            #res += self.indent_str() + str(k) + ': ' + self.pretty_count(itemValue, True)
-            #self.indent()
+            if type(itemValue) == Call:
+                res += self.indent_str()
             res += self.visit(itemValue)
-            #self.dedent()
-            #k += 1
         return res
 
 
@@ -98,11 +73,12 @@ class RegentStyleVisitor:
 
     @visitor(Index)
     def visit(self, node):
-        res = self.visit(node.value)+"."+self.visit(node.idx)
-#        res = self.visit(node.idx) + self.visit(node.value)
-#        print("INDEX: " + res)
-#        print(type(node.idx))
-#        print(type(node.value))
+        value = self.visit(node.value)
+        string = self.visit(node.idx)
+        if string.startswith('"') and string.endswith('"'):
+            res = value + '[' + string + ']'
+        else:
+            res = value + "." + string
         return res
 
 ###
@@ -111,78 +87,97 @@ class RegentStyleVisitor:
     @visitor(Assign)
     def visit(self, node):
         res = ""
-        #print("ASSIGN")
-        assert (len(node.targets)) == (len(node.values))
+        res += self.indent_str()
+        multiple_child = False
         for child in node.targets:
-        #    print(type(child))
+            if multiple_child:
+                res += ", "
             res += self.visit(child)
+            multiple_child = True
         res += " = "
+        multiple_child = False
         for child in node.values:
-        #    print(type(child))
+            if multiple_child:
+                res += ", "
             res += self.visit(child)
-        res += "\n"
+            multiple_child = True
         return res
 
     @visitor(LocalAssign)
     def visit(self, node):
-        res =  "local "
-        #print("LOCALASSIGN")
-        assert (len(node.targets)) == (len(node.values))
+        res =  self.indent_str() + "local "
+        multiple_child = False
         for child in node.targets:
-        #    print(type(child))
+            if multiple_child:
+                res += ", "
             res += self.visit(child)
+            multiple_child = True
         res += " = "
+        multiple_child = False
         for a in node.values:
-        #    print(type(child))
+            if multiple_child:
+                res += ", "
             res += self.visit(child)
+            multiple_child = True
         return res
 
     @visitor(While)
     def visit(self, node):
-        res = "while " + self.visit(node.test)
+        res = self.indent_str()
+        res += "while " + self.visit(node.test)
+        self.indent()
         res += self.visit(node.body)
+        self.dedent()
         return res
 
     @visitor(Do)
     def visit(self, node):
-        res = " do\n"
+        res = "do"
+        self.indent()
         res += self.visit(node.body)
-        res += "\nend"
+        seld.dedent()
+        res += self.indent_str() + "end"
         return res
 
     @visitor(Repeat)
     def visit(self, node):
-        res = "repeat\n"
+        res = "repeat"
+        self.indent()
         res += self.visit(node.body)
-        res += "\nuntil" + self.visit(node.test) + "\n"
+        self.dedent()
+        res += self.indent_str() + "until" + self.visit(node.test) + "\n"
         return res
 
     @visitor(ElseIf)
     def visit(self, node):
-        res = "elseif " + self.visit(node.test) + " then\n"
-        res += self.visit(node.body) + "\n"
+        res = self.indent_str() + "elseif " + self.visit(node.test) + " then"
+        self.indent()
+        res += self.visit(node.body)
+        self.dedent()
         if node.orelse != None:
             res += self.visit(node.orelse)
         return res
 
     @visitor(If)
     def visit(self, node):
-        res = "if " + self.visit(node.test) + " then\n"
-        res += self.visit(node.body) + "\n"
+        res = self.indent_str() + "if " + self.visit(node.test) + " then"
+        self.indent()
+        res += self.visit(node.body)
+        self.dedent()
         if node.orelse != None:
             res += self.visit(node.orelse)
-        res += "end\n"
+        res += self.indent_str() + "end"
         return res
 
     @visitor(Label)
     def visit(self, node):
-        res = "::"+self.visit(node.id)+"::"
+        res = self.indent_str() +  "::"+self.visit(node.id)+"::"
         return res
 
     @visitor(Goto)
     def visit(self, node):
         print("WARNING GOTO STATEMENT DETECTED. THIS IS NOT RECOMMENDED")
-        res = "goto " + self.visit(node.label)
+        res = self.indent_str() + "goto " + self.visit(node.label)
         return res
 
     @visitor(SemiColon)
@@ -192,25 +187,27 @@ class RegentStyleVisitor:
 
     @visitor(Break)
     def visit(self, node):
-        res = "break\n"
+        res = self.indent_str() + "break"
         return res
 
     @visitor(Return)
     def visit(self, node):
-        res = "return " + self.visit(node.values)
+        res = self.indent_str() + "return " + self.visit(node.values)
         return res
 
     @visitor(Fornum)
     def visit(self, node):
         ##Step is always part of the AST
-        res = "for " + self.visit(node.target)+ " = " + self.visit(node.start) + " , " + self.visit(node.stop) + " , " + self.visit(node.step) + " do\n"
+        res = self.indent_str() + "for " + self.visit(node.target)+ " = " + self.visit(node.start) + " , " + self.visit(node.stop) + " , " + self.visit(node.step) + " do"
+        self.indent()
         res += self.visit(node.body)
-        res += "\nend\n"
+        self.dedent()
+        res += self.indent_str() + "end"
         return res
 
     @visitor(Forin)
     def visit(self, node):
-        res = "for "
+        res = self.indent_str() + "for "
         multiple_targets = False
         for child in node.targets:
             if multiple_targets:
@@ -224,7 +221,9 @@ class RegentStyleVisitor:
                 res += " , "
             res += self.visit(child)
             multiple_expr = True
+        self.indent()
         res += self.visit(node.body)
+        self.dedent()
         return res
 
     @visitor(Call)
@@ -242,7 +241,7 @@ class RegentStyleVisitor:
 
     @visitor(Invoke)
     def visit(self, node):
-        res = self.visit(node.source)
+        res = self.indent_str() + self.visit(node.source)
         res += ":"
         res += self.visit(node.func)
         res += "( "
@@ -257,7 +256,7 @@ class RegentStyleVisitor:
 
     @visitor(Function)
     def visit(self, node):
-        res = "function "
+        res = self.indent_str() + "function "
         res += self.visit(node.name)
         res += "( "
         multiple_args = False
@@ -267,15 +266,15 @@ class RegentStyleVisitor:
             res += self.visit(child)
             multiple_args = True
         res += " )"
-        res += "\n"
+        self.indent()
         res += self.visit(node.body)
-        res += "end"
+        self.dedent()
+        res += self.indent_str() + "end"
         return res
         
-    ##FIXME - Not implemented correctly yet - put a warning
     @visitor(Kernel)
     def visit(self, node):
-        res = "function "
+        res = self.indent_str() + "function "
         res += self.visit(node.name)
         res += "( "
         multiple_args = False
@@ -289,25 +288,23 @@ class RegentStyleVisitor:
         if args != 2:
             raise WrongNumberOfArgsError()
         res += " )"
-        res += "\n"
-        res += "return rquote\n\n"
+        self.indent()
+        res += self.indent_str() + "return rquote\n"
         ##We know how many arguments the Kernel should have, so we can explicitly check that here.
         ##We know the format of the body should be a set of statements, followed by end
-        ##We need to add
-        ## return rexpr
-        ## .... code here
-        ## end
+        self.indent()
         res += self.visit(node.body)
-        res += "end\n\n"
-        res += "end\n"
+        self.dedent()
+        res += "\n" + self.indent_str() + "end\n"
+        self.dedent()
+        res += self.indent_str() + "end\n"
         return res
 
 
 
-    ##FIXME - Not implemented correctly yet - put a warning
     @visitor(Symmetric_Pairwise_Kernel)
     def visit(self, node):
-        res = "function "
+        res = self.indent_str() + "function "
         res += self.visit(node.name)
         res += "( "
         multiple_args = False
@@ -321,22 +318,21 @@ class RegentStyleVisitor:
         if args != 3:
             raise WrongNumberOfArgsError()
         res += " )"
-        res += "\n"
-        res += "return rquote\n\n"
+        self.indent()
+        res += self.indent_str() + "return rquote\n"
         ##We know how many arguments the Kernel should have, so we can explicitly check that here.
         ##We know the format of the body should be a set of statements, followed by end
-        ##We need to add
-        ## return rexpr
-        ## .... code here
-        ## end
+        self.indent()
         res += self.visit(node.body)
-        res += "end\n\n"
-        res += "end\n"
+        self.dedent()
+        res += "\n" + self.indent_str() + "end\n"
+        self.dedent()
+        res += self.indent_str() + "end\n"
         return res
 
     @visitor(Asymmetric_Pairwise_Kernel)
     def visit(self, node):
-        res = "function "
+        res = self.indent_str() + "function "
         res += self.visit(node.name)
         res += "( "
         multiple_args = False
@@ -350,22 +346,21 @@ class RegentStyleVisitor:
         if args != 3:
             raise WrongNumberOfArgsError()
         res += " )"
-        res += "\n"
-        res += "return rquote\n\n"
+        self.indent()
+        res += self.indent_str() + "return rquote\n"
         ##We know how many arguments the Kernel should have, so we can explicitly check that here.
         ##We know the format of the body should be a set of statements, followed by end
-        ##We need to add
-        ## return rexpr
-        ## .... code here
-        ## end
+        self.indent()
         res += self.visit(node.body)
-        res += "end\n\n"
-        res += "end\n"
+        self.dedent()
+        res += "\n" + self.indent_str() + "end\n"
+        self.dedent()
+        res += self.indent_str() + "end\n"
         return res
 
     @visitor(LocalFunction)
     def visit(self, node):
-        res = "local function "
+        res = self.indent_str() + "local function "
         res += self.visit(node.name)
         res += "( "
         multiple_args = False
@@ -375,14 +370,15 @@ class RegentStyleVisitor:
             res += self.visit(child)
             multiple_args = True
         res += " )"
-        res += "\n"
+        self.indent()
         res += self.visit(node.body)
-        res += "end"
+        self.dedent()
+        res += self.indent_str() + "end"
         return res
 
     @visitor(Method)
     def visit(self, node):
-        res = "function "
+        res = self.indent_str() + "function "
         res += self.visit(node.source)+"."
         res += self.visit(node.name)
         res += "( "
@@ -393,9 +389,10 @@ class RegentStyleVisitor:
             res += self.visit(child)
             multiple_args = True
         res += " )"
-        res += "\n"
+        self.indent()
         res += self.visit(node.body)
-        res += "end"
+        self.dedent()
+        res += self.indent_str() + "end"
         return res
 
     @visitor(Statement)
@@ -431,13 +428,26 @@ class RegentStyleVisitor:
 
     @visitor(Field)
     def visit(self, node):
-        print("Need to see what this is to be able to generate it")
-        raise NotImplementedError()
+        res = ""
+        if node.between_brackets:
+            print("WARNING - AST found a Field with between_brackets true - this may not generate correct code")
+        res = self.visit(node.value)
+        return res
 
     @visitor(Table)
     def visit(self, node):
-        print("Need to see what this is to be able to generate it")
-        raise NotImplementedError()
+        if len(node.fields) == 0:
+            res = "{}"
+        else:
+            res = "{"
+            multiple_args = False
+            for field in node.fields:
+                if multiple_args:
+                    res += " , "
+                res += self.visit(field)
+                multiple_args = True
+            res += "}"
+        return res
 
     @visitor(Dots)
     def visit(self, node):
@@ -446,7 +456,7 @@ class RegentStyleVisitor:
 
     @visitor(AnonymousFunction)
     def visit(self, node):
-        res = "function( "
+        res = self.indent_str() + "function( "
         multiple_args = False
         for child in node.args:
             if multiple_args:
@@ -454,7 +464,10 @@ class RegentStyleVisitor:
             res += self.visit(child)
             multiple_args = True
         res += " )"
+        self.indent() 
         res += self.visit(node.body)
+        self.dedent()
+        res = self.indent_str() + "end"
         return res
         
 
@@ -628,42 +641,19 @@ class RegentStyleVisitor:
 
 
 
-##FIXME: Eventually this should only be used for things with no "code", e.g.
 ## Block/Chunk which just recurse.
     @visitor(Node)
     def visit(self, node):
         res = ""
-#        res = node.to_regent(self.currentIndent)
-#        res = node.display_name + "\n"
-#        print(node.display_name)
-#        print(node.display_name + ": " + node.to_regent(self.currentIndent) + ": " + node.to_regent_post(self.currentIndent))
-#        res = self.indent_str() + node.display_name + ': ' + self.pretty_count(node)
-#
-#        self.indent()
-#
-#        # comments
         comments = node.comments
         if comments:
-#            res += self.indent_str() + 'comments' + ': ' + self.pretty_count(comments)
-#            k = 0
-#            self.indent()
             for c in comments:
                 res += self.visit(c)
-#                res += self.indent_str() + str(k) + ': ' + self.visit(c.s)
-#                k += 1
-#            self.dedent()
-#
+
         for attr, attrValue in node.__dict__.items():
             if not attr.startswith(('_', 'comments')):
                 if isinstance(attrValue, Node) or isinstance(attrValue, list):
-                    #res += self.indent_str() + attr + ': ' + self.pretty_count(attrValue)
-                    self.indent()
                     res += self.visit(attrValue)
-                    self.dedent()
-                #else:
-                #    if attrValue is not None:
-                #        res += self.indent_str() + attr + ': ' + self.visit(attrValue)
-        #self.dedent()
         return res
 
 

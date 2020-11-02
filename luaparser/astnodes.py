@@ -409,15 +409,6 @@ class Symmetric_Pairwise_Kernel(Statement):
         self.args: List[Expression] = args
         self.body: Block = body
 
-    def to_regent(self, indent) -> str:
-        RegentString = ' '*indent + f"function"
-#        RegentString = ' '*indent + f"function {self.name.to_regent(0)}({self.args})\n" + ' '*(indent*2) + "return rexpr\n"
-        return RegentString
-
-    def to_regent_post(self, indent) -> str:
-        RegentString = ' '*indent + "end"
-        return RegentString
-
 class Asymmetric_Pairwise_Kernel(Statement):
     """Define the RegentParticleDSL Asymmetric Pairwise Kernel declaration statement.
 
