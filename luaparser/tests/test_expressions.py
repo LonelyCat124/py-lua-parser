@@ -290,8 +290,8 @@ class ExpressionsTestCase(tests.TestCase):
         exp = Chunk(Block([Assign(
             targets=[Name('str')],
             values=[Concat(
-                left=String('begin'),
-                right=String('end')
+                left=String('\"begin\"'),
+                right=String('\"end\"')
             )]
         )]))
         self.assertEqual(exp, tree)
@@ -318,8 +318,8 @@ class ExpressionsTestCase(tests.TestCase):
             targets=[Name('a')],
             values=[
                 Table([
-                    Field(Name('foo'), String('bar')),
-                    Field(Name('bar'), String('foo'))
+                    Field(Name('foo'), String('\"bar\"')),
+                    Field(Name('bar'), String('\"foo\"'))
                 ]
                 )]
         )]))
@@ -338,7 +338,7 @@ class ExpressionsTestCase(tests.TestCase):
             targets=[Name('foo')],
             values=[
                 Table([
-                    Field(Name('car'), Table([Field(Name('name'), String('bmw'))])),
+                    Field(Name('car'), Table([Field(Name('name'), String('\'bmw\''))])),
                     Field(Name('options'), Table([Field(Name('radio'), TrueExpr())]))
                 ]
                 )]
@@ -390,10 +390,10 @@ class ExpressionsTestCase(tests.TestCase):
             values=[
                 Table([
                     Field(Name('options'), Table([Field(Name('radio'), TrueExpr())])),
-                    Field(Number(1), String('enabled')),
+                    Field(Number(1), String('\"enabled\"')),
                     Field(Number(2), Number(157)),
                     Field(TrueExpr(), FalseExpr(), between_brackets=True),
-                    Field(String('true'), TrueExpr(), between_brackets=True),
+                    Field(String('\'true\''), TrueExpr(), between_brackets=True),
                 ]
                 )]
         ), SemiColon()]))
@@ -407,7 +407,7 @@ class ExpressionsTestCase(tests.TestCase):
         tree = ast.parse(r'print("hello")')
         exp = Chunk(Block([Call(
             func=Name('print'),
-            args=[String('hello')]
+            args=[String('\"hello\"')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -415,7 +415,7 @@ class ExpressionsTestCase(tests.TestCase):
         tree = ast.parse(r'print "hello"')
         exp = Chunk(Block([Call(
             func=Name('print'),
-            args=[String('hello')]
+            args=[String('\"hello\"')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -440,7 +440,7 @@ class ExpressionsTestCase(tests.TestCase):
         exp = Chunk(Block([Invoke(
             source=Name('foo'),
             func=Name('print'),
-            args=[String('hello')]
+            args=[String('\"hello\"')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -453,7 +453,7 @@ class ExpressionsTestCase(tests.TestCase):
                 args=[]
             ),
             func=Name('print'),
-            args=[String('hello')]
+            args=[String('\"hello\"')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -461,7 +461,7 @@ class ExpressionsTestCase(tests.TestCase):
         tree = ast.parse(r'print("hello",  42)')
         exp = Chunk(Block([Call(
             func=Name('print'),
-            args=[String('hello'), Number(n=42)]
+            args=[String('\"hello\"'), Number(n=42)]
         )]))
         self.assertEqual(exp, tree)
 

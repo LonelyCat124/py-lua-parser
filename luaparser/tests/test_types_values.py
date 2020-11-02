@@ -95,7 +95,7 @@ class TypesValuesTestCase(tests.TestCase):
         tree = ast.parse(r'a = "a line"')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
-            values=[String('a line')]
+            values=[String('\"a line\"')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -103,7 +103,7 @@ class TypesValuesTestCase(tests.TestCase):
         tree = ast.parse(r"b = 'another line'")
         exp = Chunk(Block([Assign(
             targets=[Name('b')],
-            values=[String('another line')]
+            values=[String('\'another line\'')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -111,7 +111,7 @@ class TypesValuesTestCase(tests.TestCase):
         tree = ast.parse(r'''b = "one line\nnext line\n\"in quotes\", 'in quotes'"''')
         exp = Chunk(Block([Assign(
             targets=[Name('b')],
-            values=[String(r"one line\nnext line\n\"in quotes\", 'in quotes'")]
+            values=[String(r'''"one line\nnext line\n\"in quotes\", 'in quotes'"''')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -119,7 +119,7 @@ class TypesValuesTestCase(tests.TestCase):
         tree = ast.parse(r'b = [[hello]]')
         exp = Chunk(Block([Assign(
             targets=[Name('b')],
-            values=[String('hello')]
+            values=[String(r'[[hello]]')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -130,7 +130,7 @@ class TypesValuesTestCase(tests.TestCase):
             '''))
         exp = Chunk(Block([Assign(
             targets=[Name('b')],
-            values=[String('Multiple lines of text\ncan be enclosed in double square\nbrackets.')]
+            values=[String('[[Multiple lines of text\ncan be enclosed in double square\nbrackets.]]')]
         )]))
         self.assertEqual(exp, tree)
 
@@ -138,6 +138,6 @@ class TypesValuesTestCase(tests.TestCase):
         tree = ast.parse(r'b = [=[one [[two]] one]=]')
         exp = Chunk(Block([Assign(
             targets=[Name('b')],
-            values=[String('one [[two]] one')]
+            values=[String(r'[=[one [[two]] one]=]')]
         )]))
         self.assertEqual(exp, tree)

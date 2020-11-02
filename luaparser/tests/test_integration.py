@@ -23,7 +23,7 @@ class IntegrationTestCase(tests.TestCase):
 
         exp = Chunk(Block([
             Call(Name('describe'), [
-                String(''),
+                String('\"\"'),
                 AnonymousFunction([], Block([
                     Call(Name('it'), [
                         AnonymousFunction([], Block([
@@ -67,7 +67,7 @@ class IntegrationTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
         tree = ast.parse(textwrap.dedent(r'''x['a']'''))
-        exp = Chunk(Block([Index(idx=String('a'), value=Name('x'))]))
+        exp = Chunk(Block([Index(idx=String('\'a\''), value=Name('x'))]))
         self.assertEqual(exp, tree)
 
         tree = ast.parse(textwrap.dedent(r'x.a'))
