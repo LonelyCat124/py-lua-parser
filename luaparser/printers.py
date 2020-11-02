@@ -52,6 +52,15 @@ class RegentStyleVisitor:
     def dedent(self):
         self.currentIndent -= self.indentValue
 
+    def enter_regent(self):
+        self.inRegent = True
+
+    def in_regent(self):
+        return self.inRegent
+
+    def leave_regent(self):
+        self.inRegent = False
+
     @visitor(list)
     def visit(self, obj):
         res = ''
@@ -105,7 +114,10 @@ class RegentStyleVisitor:
 
     @visitor(LocalAssign)
     def visit(self, node):
-        res =  self.indent_str() + "local "
+        if self.in_regent():
+            res = self.indent_str() + "var "
+        else:
+            res =  self.indent_str() + "local "
         multiple_child = False
         for child in node.targets:
             if multiple_child:
@@ -114,7 +126,7 @@ class RegentStyleVisitor:
             multiple_child = True
         res += " = "
         multiple_child = False
-        for a in node.values:
+        for child in node.values:
             if multiple_child:
                 res += ", "
             res += self.visit(child)
@@ -274,6 +286,7 @@ class RegentStyleVisitor:
         
     @visitor(Kernel)
     def visit(self, node):
+        self.enter_regent()
         res = self.indent_str() + "function "
         res += self.visit(node.name)
         res += "( "
@@ -298,12 +311,14 @@ class RegentStyleVisitor:
         res += "\n" + self.indent_str() + "end\n"
         self.dedent()
         res += self.indent_str() + "end\n"
+        self.leave_regent()
         return res
 
 
 
     @visitor(Symmetric_Pairwise_Kernel)
     def visit(self, node):
+        self.enter_regent()
         res = self.indent_str() + "function "
         res += self.visit(node.name)
         res += "( "
@@ -328,10 +343,12 @@ class RegentStyleVisitor:
         res += "\n" + self.indent_str() + "end\n"
         self.dedent()
         res += self.indent_str() + "end\n"
+        self.leave_regent()
         return res
 
     @visitor(Asymmetric_Pairwise_Kernel)
     def visit(self, node):
+        self.enter_regent()
         res = self.indent_str() + "function "
         res += self.visit(node.name)
         res += "( "
@@ -356,6 +373,7 @@ class RegentStyleVisitor:
         res += "\n" + self.indent_str() + "end\n"
         self.dedent()
         res += self.indent_str() + "end\n"
+        self.leave_regent()
         return res
 
     @visitor(LocalFunction)
