@@ -376,6 +376,17 @@ class RegentStyleVisitor:
         self.leave_regent()
         return res
 
+    @visitor(Particle_Type)
+    def visit(self, node):
+        res = self.indent_str() + "fspace part {"
+        self.indent()
+        res += self.indent_str() + "core_part_space : core_part,"
+        res += self.indent_str() + "neighbour_part_space : neighbour_part,"
+        res += self.visit(node.fspaces)
+        self.dedent()
+        res += self.indent_str() + "}\n"
+        return res
+
     @visitor(LocalFunction)
     def visit(self, node):
         res = self.indent_str() + "local function "
@@ -655,6 +666,18 @@ class RegentStyleVisitor:
     def visit(self, node):
         print(f"{type(node)} Not implemented in Regent codegen")
         raise NotImplementedError()
+
+### Nodes required for particle type declaration
+    @visitor(RegentType)
+    def visit(self, node):
+        return " " + node.type_name
+
+    @visitor(Fspace)
+    def visit(self, node):
+        res = self.indent_str()
+        res += node.name + " :"
+        res += self.visit(node.regent_type) + ","
+        return res
 
 
 

@@ -44,12 +44,6 @@ class Node:
     def to_json(self) -> any:
         return {self._name: {k: v for k, v in self.__dict__.items() if not k.startswith('_') and v}}
 
-    def to_regent(self, indent) -> str:
-        return "NYI"
-    
-    def to_regent_post(self, indent) -> str:
-        return ""
-
 
 class Comment(Node):
     def __init__(self, s: str, is_multi_line: bool = False):
@@ -71,6 +65,11 @@ class Statement(Node):
 
 class Expression(Node):
     """Define a Lua expression.
+    """
+    pass
+
+class Definition(Node):
+    """Define a Regent definition.
     """
     pass
 
@@ -422,6 +421,16 @@ class Asymmetric_Pairwise_Kernel(Statement):
         self.name: Expression = name
         self.args: List[Expression] = args
         self.body: Block = body
+
+class Particle_Type(Statement):
+    """Define the RegentParticleDSL Particle Type declaration statement.
+
+       Attributes: 
+       fspaces (`list<Definition>`): Field spaces contained inside the type declaration.
+    """
+    def __init__(self, fspaces: List[Definition]):
+        super(Particle_Type, self).__init__('Particle_Type')
+        self.fspaces : List[Definition] = fspaces
 
 class LocalFunction(Statement):
     """Define the Lua local function declaration statement.
@@ -962,3 +971,32 @@ class ULengthOP(UnaryOp):
 
     def __init__(self, operand: Expression):
         super(ULengthOP, self).__init__('ULengthOp', operand)
+
+
+''' ----------------------------------------------------------------------- '''
+''' Regent - Fspace declaration                                             '''
+''' ----------------------------------------------------------------------- '''
+class RegentType(Node):
+    """Defines a type of a variable
+
+       Attributes:
+       type_name ('String') : The name of the type
+    """
+    
+    def __init__(self, type_name : String):
+        super(RegentType, self).__init__('RegentType', type_name)
+        self.type_name = type_name
+
+class Fspace(Definition):
+    """Defines a variable declaration inside the particle_type
+
+       Attributes:
+       name (`Expression`) : The name of the variable
+       regent_type (`RegentType`) : The type of the variable
+    """
+    
+    def __init__(self, name: Expression, regent_type: RegentType):
+        super(Fspace, self).__init__('Fspace')
+        self.name = name
+        self.regent_type = regent_type
+
