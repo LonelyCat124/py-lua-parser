@@ -418,6 +418,7 @@ class Builder:
             self.parse_kernel() or \
             self.parse_symmetric_pairwise_kernel() or \
             self.parse_asymmetric_pairwise_kernel() or \
+            self.parse_particle_type() or \
             self.parse_label()
 
         if stat:
@@ -931,6 +932,81 @@ class Builder:
 
         return self.failure()
 
+    def parse_particle_type(self) -> Particle_Type or bool:
+        self.save()
+        self._expected = []
+        start_token = self.next_is_rc(Tokens.PART_TYPE)
+        if start_token:
+            if self.next_is_rc(Tokens.OBRACE):
+                self.success()
+                self.save()
+                fspaces = self.parse_fspaces()
+                if self.next_is_rc(Tokens.CBRACE):
+                    self.success()
+                    part_type = Particle_Type(fspaces)
+                    return part_type
+                else:
+                    self.abort()
+            else:
+                self.abort()
+
+
+            
+        return self.failure()
+
+    def parse_fspaces(self) -> List[Fspace]:
+        fspaces = []
+        while True:
+            self.save()
+            next_fspace = self.parse_fspace()
+            if next_fspace:
+                self.success()
+                fspaces.append(next_fspace)
+                self.save()
+                if self.next_is_rc(Tokens.COMMA):
+                    self.success()
+                else:
+                    self.failure()
+                    return fspaces
+            else:
+                self.failure()
+                return fspaces
+
+
+    def parse_fspace(self) -> Fspace or bool:
+        self.save()
+        if self.next_is_rc(Tokens.NAME):
+            name = self.text
+            if self.next_is_rc(Tokens.COL):
+                regent_type = self.parse_type(Tokens.INT) or \
+                        self.parse_type(Tokens.INT32) or \
+                        self.parse_type(Tokens.INT64) or \
+                        self.parse_type(Tokens.UINT32) or \
+                        self.parse_type(Tokens.UINT64) or \
+                        self.parse_type(Tokens.FLOAT) or \
+                        self.parse_type(Tokens.DOUBLE) or \
+                        self.parse_type(Tokens.INT1D) or \
+                        self.parse_type(Tokens.INT2D) or \
+                        self.parse_type(Tokens.INT3D)
+                if regent_type:
+                    self.success()
+                    fspace = Fspace(name, regent_type)
+                    return fspace
+                else:
+                    self.abort()
+            else:
+                self.abort()
+
+        return self.failure()
+
+    def parse_type(self,  tok) -> RegentType or bool:
+        self.save()
+        if self.next_is_rc(tok):
+            name = self.text
+            node = RegentType(name)
+            self.success()
+            return node
+        return self.failure()
 
     def parse_names(self) -> Name or Index or bool:
         self.save()

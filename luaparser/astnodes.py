@@ -996,7 +996,7 @@ class Fspace(Definition):
     """
     
     def __init__(self, name: Expression, regent_type: RegentType):
-        super(Fspace, self).__init__('Fspace', name, regent_type)
+        super(Fspace, self).__init__('Fspace')
         self.name = name
         self.regent_type = regent_type
 
