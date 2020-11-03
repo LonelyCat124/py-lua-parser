@@ -146,6 +146,7 @@ regent_type
   | INT1D
   | INT2D
   | INT3D
+  | BOOL
   ;
 
 names
@@ -352,6 +353,7 @@ DOUBLE    : 'double';
 INT1D     : 'int1d';
 INT2D     : 'int2d';
 INT3D     : 'int3d';
+BOOL      : 'bool';
 
 NAME
   : (Letter | '_') (Letter | '_' | Digit)*

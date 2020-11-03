@@ -102,15 +102,16 @@ class Tokens:
     INT1D=68
     INT2D=69
     INT3D=70
-    NAME=71
-    NUMBER=72
-    STRING=73
-    COMMENT=74
-    LINE_COMMENT=75
-    SPACE=76
-    NEWLINE=77
-    SHEBANG=78
-    LongBracket=79
+    BOOL=71
+    NAME=72
+    NUMBER=73
+    STRING=74
+    COMMENT=75
+    LINE_COMMENT=76
+    SPACE=77
+    NEWLINE=78
+    SHEBANG=79
+    LongBracket=80
 
 
 #LITERAL_NAMES = ["<INVALID>",
@@ -136,7 +137,7 @@ LITERAL_NAMES = [ "<INVALID>", "'and'", "'asym_pairwise_kernel'", "'break'",
                      "'['", "']'", "'::'", "':'", "','", "'...'", "'..'",
                      "'.'", "';'", "'int'", "'uint'", "'int32'", "'uint32'",
                      "'int64'", "'uint64'", "'float'", "'double'", "'int1d'",
-                     "'int2d'", "'int3d'" ]
+                     "'int2d'", "'int3d'", "'bool'" ]
 
 def _listify(obj):
     if not isinstance(obj, list):
@@ -987,7 +988,8 @@ class Builder:
                         self.parse_type(Tokens.DOUBLE) or \
                         self.parse_type(Tokens.INT1D) or \
                         self.parse_type(Tokens.INT2D) or \
-                        self.parse_type(Tokens.INT3D)
+                        self.parse_type(Tokens.INT3D) or \
+                        self.parse_type(Tokens.BOOL)
                 if regent_type:
                     self.success()
                     fspace = Fspace(name, regent_type)
