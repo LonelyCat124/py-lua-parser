@@ -7,13 +7,14 @@ from luaparser.builder import Builder
 from luaparser.utils.visitor import *
 from antlr4.error.ErrorListener import ErrorListener
 import json
-from typing import Generator
+from typing import Generator, Tuple
 
 
-def parse(source: str) -> Chunk:
+def parse(source: str) -> Tuple[Chunk, Builder]:
     """ Parse Lua source to a Chunk.
     """
-    return Builder(source).process()
+    buildy = Builder(source)
+    return buildy.process(), buildy
 
 
 def get_token_stream(source: str) -> CommonTokenStream:

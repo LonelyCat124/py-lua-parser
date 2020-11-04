@@ -2,13 +2,19 @@
     ``astnodes`` module
     ===================
 
-    Contains all Ast Node definitions.
+    Contains all Ast Node definitions, and a declaration for an object that
+    can store the names of Kernels
 """
 from typing import List, Optional
 
 
 Comments = Optional[List[str]]
 
+class Kernel_Store:
+    def __init__(self):
+        self.kernels = {}
+        self.asymmetric_kernels = {}
+        self.symmetric_kernels = {}
 
 def _equal_dicts(d1, d2, ignore_keys):
     ignored = set(ignore_keys)
@@ -27,6 +33,8 @@ class Node:
     def __init__(self, name: str, comments: Comments = None):
         if comments is None:
             comments = []
+        else:
+            print(f"COMMENTS {comments}")
         self._name: str = name
         self.comments: List[str] = comments
         self.start_char: int = None  # start character offset
@@ -48,6 +56,7 @@ class Node:
 class Comment(Node):
     def __init__(self, s: str, is_multi_line: bool = False):
         super(Comment, self).__init__('Comment')
+        print(f"Created comment: {s}")
         self.s: str = s
         self.is_multi_line: bool = is_multi_line
 
@@ -82,9 +91,6 @@ class Block(Node):
         super(Block, self).__init__('Block')
         self.body: List[Statement] = body
 
-    def to_regent(self, indent) -> str:
-        return ""
-
 
 class Chunk(Node):
     """Define a Lua chunk.
@@ -96,9 +102,6 @@ class Chunk(Node):
     def __init__(self, body: Block, comments: Comments = None):
         super(Chunk, self).__init__('Chunk', comments)
         self.body = body
-
-    def to_regent(self, indent) -> str:
-        return ""
 
 
 '''
@@ -422,6 +425,28 @@ class Asymmetric_Pairwise_Kernel(Statement):
         self.args: List[Expression] = args
         self.body: Block = body
 
+class DSL_main(Statement):
+    """Define the RegentParticleDSL main entry point.
+
+        Attributes:
+        body (`Block`):  List of staements to execute.
+    """
+    def __init__(self, body : Block):
+        super(DSL_main, self).__init__('DSL_main')
+        self.body : Block = body
+
+class DSL_invoke(Statement):
+    """Define the RegentParticleDSL invoke function.
+
+        Attributes:
+        args (`list<Expression>`): Invoke arguments.
+        kernel_store (`Kernel_Store`): The Kernel_Store containing the Kernel functions
+    """
+    def __init__(self, args: List[Expression], kernel_store : Kernel_Store):
+        super(DSL_invoke, self).__init__('DSL_invoke')
+        self.args : List[Expression] = args
+        self.kernel_store : Kernel_Store = kernel_store
+
 class Particle_Type(Statement):
     """Define the RegentParticleDSL Particle Type declaration statement.
 
@@ -431,6 +456,7 @@ class Particle_Type(Statement):
     def __init__(self, fspaces: List[Definition]):
         super(Particle_Type, self).__init__('Particle_Type')
         self.fspaces : List[Definition] = fspaces
+        self.printed = False
 
 class LocalFunction(Statement):
     """Define the Lua local function declaration statement.
