@@ -10,12 +10,12 @@ class StatementsTestCase(tests.TestCase):
     3.3.1 – Blocks
     """
     def test_empty_block(self):
-        tree = ast.parse(";;;;")
+        tree, builder = ast.parse(";;;;")
         exp = Chunk(Block([SemiColon(), SemiColon(), SemiColon(), SemiColon()]))
         self.assertEqual(exp, tree)
 
     def test_2_block(self):
-        tree = ast.parse("local a;local b;")
+        tree, builder = ast.parse("local a;local b;")
         exp = Chunk(Block([
             LocalAssign(targets=[Name('a')],values=[]),SemiColon(),
             LocalAssign(targets=[Name('b')],values=[]),SemiColon(),
@@ -26,35 +26,35 @@ class StatementsTestCase(tests.TestCase):
     3.3.3 – Assignment
     """
     def test_set_number(self):
-        tree = ast.parse("i=3")
+        tree, builder = ast.parse("i=3")
         exp = Chunk(Block([
             Assign(targets=[Name('i')],values=[Number(3)])
         ]))
         self.assertEqual(exp, tree)
 
     def test_set_string(self):
-        tree = ast.parse('i="foo bar"')
+        tree, builder = ast.parse('i="foo bar"')
         exp = Chunk(Block([
             Assign(targets=[Name('i')],values=[String('\"foo bar\"')])
         ]))
         self.assertEqual(exp, tree)
 
     def test_set_array_index(self):
-        tree = ast.parse('a[i] = 42')
+        tree, builder = ast.parse('a[i] = 42')
         exp = Chunk(Block([
             Assign(targets=[Index(idx=Name('i'), value=Name('a'))], values=[Number(42)])
         ]))
         self.assertEqual(exp, tree)
 
     def test_set_table_index(self):
-        tree = ast.parse('_ENV.x = val')
+        tree, builder = ast.parse('_ENV.x = val')
         exp = Chunk(Block([
             Assign(targets=[Index(idx=String('x'), value=Name('_ENV'))], values=[Name('val')])
         ]))
         self.assertEqual(exp, tree)
 
     def test_set_multi(self):
-        tree = ast.parse('x, y = y, x')
+        tree, builder = ast.parse('x, y = y, x')
 
         exp = Chunk(Block([
             Assign(targets=[Name('x'), Name('y')],values=[Name('y'), Name('x')])
@@ -65,7 +65,7 @@ class StatementsTestCase(tests.TestCase):
     3.3.4 – Control Structures
     '''
     def test_for_in_1(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             for k, v in pairs({}) do
               print(k, v)
             end
@@ -80,7 +80,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_for_in_2(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             for k, v in foo.pairs({}) do
               print(k, v)
             end
@@ -95,7 +95,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_for_in_3(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             for k, v in foo:pairs({}) do
               print(k, v)
             end
@@ -110,7 +110,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_for_in_4(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             for k, v in bar.foo:pairs({}) do
               print(k, v)
             end
@@ -125,7 +125,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_for_in_5(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             for k, v in bar:foo(42):pairs({}) do
               print(k, v)
             end
@@ -143,7 +143,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_for_in_6(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             for k, v in bar:foo(42).pairs({}) do
               print(k, v)
             end
@@ -160,7 +160,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_numeric_for(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             for i=1,10,2 do print(i) end
             """))
         exp = Chunk(Block([
@@ -175,7 +175,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_do_end(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             do
               local foo = 'bar'
             end
@@ -188,7 +188,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_while(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             while true do
               print('hello world')
             end"""))
@@ -200,7 +200,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_repeat_until(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             repeat        
             until true
             """))
@@ -210,7 +210,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_if(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             if true then    
             end
             """))
@@ -225,7 +225,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_if_exp(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             if (a<2) then    
             end
             """))
@@ -242,7 +242,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_if_elseif(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             if true then 
             elseif false then     
             end
@@ -257,7 +257,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_if_elseif_else(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             if true then 
             elseif false then  
             else   
@@ -277,7 +277,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_if_elseif_elseif_else(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             if true then
             elseif false then
             elseif 42 then
@@ -303,7 +303,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_label(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             ::foo::
             """))
         exp = Chunk(Block([
@@ -312,7 +312,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_goto(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             goto foo
             ::foo::
             """))
@@ -323,7 +323,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_break(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             break
             """))
         exp = Chunk(Block([
@@ -332,14 +332,14 @@ class StatementsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_return(self):
-        tree = ast.parse(r'return nil')
+        tree, builder = ast.parse(r'return nil')
         exp = Chunk(Block([Return([
             Nil()
         ])]))
         self.assertEqual(exp, tree)
 
     def test_return_multiple(self):
-        tree = ast.parse(r'return nil, "error", 42; ')
+        tree, builder = ast.parse(r'return nil, "error", 42; ')
         exp = Chunk(Block([Return([
             Nil(), String('\"error\"'), Number(42)
         ])]))
@@ -353,7 +353,7 @@ class StatementsTestCase(tests.TestCase):
         self.assertRaises(SyntaxException, ast.parse, src)
 
     def test_index(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             foo.bar = 'bar'
             """))
         exp = Chunk(Block([

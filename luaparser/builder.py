@@ -17,6 +17,11 @@ class SyntaxException(Exception):
             message = 'Error: ' + user_msg
         super().__init__(message)
 
+class MultipleParticleDeclarationException(Exception):
+    pass
+
+class MultipleMainDeclarationException(Exception):
+    pass
 
 class Expr(Enum):
     OR = 1
@@ -36,82 +41,84 @@ class Tokens:
     ASYM_PAIRWISE_KERNEL=2
     BREAK=3
     DO=4
-    ELSETOK=5
-    ELSEIF=6
-    END=7
-    FALSE=8
-    FOR=9
-    FUNCTION=10
-    GOTO=11
-    IFTOK=12
-    IN=13
-    LOCAL=14
-    KERNEL=15
-    NIL=16
-    NOT=17
-    OR=18
-    PART_TYPE=19
-    REPEAT=20
-    RETURN=21
-    SYM_PAIRWISE_KERNEL=22
-    THEN=23
-    TRUE=24
-    UNTIL=25
-    WHILE=26
-    ADD=27
-    MINUS=28
-    MULT=29
-    DIV=30
-    FLOOR=31
-    MOD=32
-    POW=33
-    LENGTH=34
-    EQ=35
-    NEQ=36
-    LTEQ=37
-    GTEQ=38
-    LT=39
-    GT=40
-    ASSIGN=41
-    BITAND=42
-    BITOR=43
-    BITNOT=44
-    BITRSHIFT=45
-    BITRLEFT=46
-    OPAR=47
-    CPAR=48
-    OBRACE=49
-    CBRACE=50
-    OBRACK=51
-    CBRACK=52
-    COLCOL=53
-    COL=54
-    COMMA=55
-    VARARGS=56
-    CONCAT=57
-    DOT=58
-    SEMCOL=59
-    INT=60
-    UINT=61
-    INT32=62
-    UINT32=63
-    INT64=64
-    UINT64=65
-    FLOAT=66
-    DOUBLE=67
-    INT1D=68
-    INT2D=69
-    INT3D=70
-    BOOL=71
-    NAME=72
-    NUMBER=73
-    STRING=74
-    COMMENT=75
-    LINE_COMMENT=76
-    SPACE=77
-    NEWLINE=78
-    SHEBANG=79
-    LongBracket=80
+    DSL_MAIN=5
+    DSL_INVOKE=6
+    ELSETOK=7
+    ELSEIF=8
+    END=9
+    FALSE=10
+    FOR=11
+    FUNCTION=12
+    GOTO=13
+    IFTOK=14
+    IN=15
+    LOCAL=16
+    KERNEL=17
+    NIL=18
+    NOT=19
+    OR=20
+    PART_TYPE=21
+    REPEAT=22
+    RETURN=23
+    SYM_PAIRWISE_KERNEL=24
+    THEN=25
+    TRUE=26
+    UNTIL=27
+    WHILE=28
+    ADD=29
+    MINUS=30
+    MULT=31
+    DIV=32
+    FLOOR=33
+    MOD=34
+    POW=35
+    LENGTH=36
+    EQ=37
+    NEQ=38
+    LTEQ=39
+    GTEQ=40
+    LT=41
+    GT=42
+    ASSIGN=43
+    BITAND=44
+    BITOR=45
+    BITNOT=46
+    BITRSHIFT=47
+    BITRLEFT=48
+    OPAR=49
+    CPAR=50
+    OBRACE=51
+    CBRACE=52
+    OBRACK=53
+    CBRACK=54
+    COLCOL=55
+    COL=56
+    COMMA=57
+    VARARGS=58
+    CONCAT=59
+    DOT=60
+    SEMCOL=61
+    INT=62
+    UINT=63
+    INT32=64
+    UINT32=65
+    INT64=66
+    UINT64=67
+    FLOAT=68
+    DOUBLE=69
+    INT1D=70
+    INT2D=71
+    INT3D=72
+    BOOL=73
+    NAME=74
+    NUMBER=75
+    STRING=76
+    COMMENT=77
+    LINE_COMMENT=78
+    SPACE=79
+    NEWLINE=80
+    SHEBANG=81
+LongBracket=82
 
 
 #LITERAL_NAMES = ["<INVALID>",
@@ -126,7 +133,7 @@ class Tokens:
 #                 "SPACE", "NEWLINE", "SHEBANG", "LONG_BRACKET"]
 
 LITERAL_NAMES = [ "<INVALID>", "'and'", "'asym_pairwise_kernel'", "'break'",
-                     "'do'", "'else'", "'elseif'", "'end'", "'false'", "'for'",
+                     "'do'", "'dsl_main'", "'dsl_invoke'", "'else'", "'elseif'", "'end'", "'false'", "'for'",
                      "'function'", "'goto'", "'if'", "'in'", "'local'",
                      "'kernel'", "'nil'", "'not'", "'or'", "'part_type'",
                      "'repeat'", "'return'", "'sym_pairwise_kernel'", "'then'",
@@ -137,7 +144,8 @@ LITERAL_NAMES = [ "<INVALID>", "'and'", "'asym_pairwise_kernel'", "'break'",
                      "'['", "']'", "'::'", "':'", "','", "'...'", "'..'",
                      "'.'", "';'", "'int'", "'uint'", "'int32'", "'uint32'",
                      "'int64'", "'uint64'", "'float'", "'double'", "'int1d'",
-                     "'int2d'", "'int3d'", "'bool'" ]
+                     "'int2d'", "'int3d'", "'bool'", "NAME", "NUMBER", "STRING", "COMMENT", "LINE_COMMENT",
+                 "SPACE", "NEWLINE", "SHEBANG", "LONG_BRACKET" ]
 
 def _listify(obj):
     if not isinstance(obj, list):
@@ -189,6 +197,12 @@ class Builder:
         self.comments: List[Comment] = []
         self._hidden_handled: bool = False
         self._hidden_handled_stack: List[bool] = []
+
+        #Kernels
+        self._part_type = None
+        self._kernels = Kernel_Store()
+        self._dsl_main = None
+
 
     def process(self) -> Chunk:
         node = self.parse_chunk()
@@ -420,6 +434,8 @@ class Builder:
             self.parse_symmetric_pairwise_kernel() or \
             self.parse_asymmetric_pairwise_kernel() or \
             self.parse_particle_type() or \
+            self.parse_dsl_main() or \
+            self.parse_dsl_invoke() or \
             self.parse_label()
 
         if stat:
@@ -857,6 +873,7 @@ class Builder:
                 if func_body:
                     self.success()
                     node = Kernel(names, func_body[0], func_body[1])
+                    self._kernels.kernels[names.id] = node
                     self.handle_hidden_right()
                     node.start_char = start_token.start
                     node.stop_char = func_body[1].stop_char
@@ -891,6 +908,7 @@ class Builder:
                 if func_body:
                     self.success()
                     node = Symmetric_Pairwise_Kernel(names, func_body[0], func_body[1])
+                    self._kernels.symmetric_kernels[names.id] = node
                     self.handle_hidden_right()
                     node.start_char = start_token.start
                     node.stop_char = func_body[1].stop_char
@@ -925,11 +943,55 @@ class Builder:
                 if func_body:
                     self.success()
                     node = Asymmetric_Pairwise_Kernel(names, func_body[0], func_body[1])
+                    self._kernels.asymmetric_kernels[names.id] = node
                     self.handle_hidden_right()
                     node.start_char = start_token.start
                     node.stop_char = func_body[1].stop_char
                     return node
             self.abort()
+
+        return self.failure()
+    
+    def parse_dsl_main(self) -> DSL_main or bool:
+        self.save()
+        self._expected = []
+        start_token = self.next_is_rc(Tokens.DSL_MAIN)
+        if start_token:
+            self.save()
+            func_body = self.parse_func_body()
+            if func_body:
+                self.success()
+                self.success()
+                if self._dsl_main:
+                    print("Only one main entry function expected")
+                    raise MultipleMainDeclarationException
+                node = DSL_main(func_body[1])
+                self._dsl_main = node
+                self.handle_hidden_right()
+                node.start_char = start_token.start
+                node.stop_char = func_body[1].stop_char
+                return node
+                    
+                
+
+            self.abort()
+        return self.failure()
+
+    def parse_dsl_invoke(self) -> DSL_invoke or bool:
+        self.save()
+        self._expected = []
+        start_token = self.next_is_rc(Tokens.DSL_INVOKE)
+        if start_token:
+            if self.next_is_rc(Tokens.OPAR):
+                args = self.parse_param_list()
+                if args and self.next_is_rc(Tokens.CPAR):
+                    self.success()
+                    node = DSL_invoke(args, self._kernels)
+                    return node
+                    
+
+            self.abort()
+
 
         return self.failure()
 
@@ -945,6 +1007,11 @@ class Builder:
                 if self.next_is_rc(Tokens.CBRACE):
                     self.success()
                     part_type = Particle_Type(fspaces)
+                    if self._part_type:
+                        print("Only one Particle Type declaration expected")
+                        raise MultipleParticleDeclarationException
+                    else:
+                        self._part_type = part_type
                     return part_type
                 else:
                     self.abort()

@@ -56,7 +56,9 @@ stat
   | kernel
   | sym_pairwise_kernel
   | asym_pairwise_kernel
+  | dsl_main
   | particle_type
+  | dsl_invoke
   | label
   | BREAK
   | SEMCOL
@@ -121,6 +123,14 @@ sym_pairwise_kernel
 
 asym_pairwise_kernel
   : ASYM_PAIRWISE_KERNEL names (COL NAME func_body | func_body)
+  ;
+
+dsl_main
+  : DSL_MAIN func_body
+;
+
+dsl_invoke
+  : DSL_INVOKE OPAR name_list CPAR
   ;
 
 particle_type
@@ -287,6 +297,8 @@ AND       : 'and';
 ASYM_PAIRWISE_KERNEL : 'asym_pairwise_kernel';
 BREAK     : 'break';
 DO        : 'do';
+DSL_MAIN  : 'dsl_main';
+DSL_INVOKE : 'dsl_invoke';
 ELSE      : 'else';
 ELSEIF    : 'elseif';
 END       : 'end';

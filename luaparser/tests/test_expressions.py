@@ -12,7 +12,7 @@ class ExpressionsTestCase(tests.TestCase):
     """
 
     def test_addition(self):
-        tree = ast.parse(r'a = 1 + 0.2')
+        tree, builder = ast.parse(r'a = 1 + 0.2')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[
@@ -25,7 +25,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_substraction(self):
-        tree = ast.parse(r'a = 1 - 0.2')
+        tree, builder = ast.parse(r'a = 1 - 0.2')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[
@@ -38,7 +38,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_multiplication(self):
-        tree = ast.parse(r'a = 1 * 0.2')
+        tree, builder = ast.parse(r'a = 1 * 0.2')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[
@@ -51,7 +51,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_float_division(self):
-        tree = ast.parse(r'a = 1 / 0.2')
+        tree, builder = ast.parse(r'a = 1 / 0.2')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[
@@ -64,7 +64,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_floor_division(self):
-        tree = ast.parse(r'a = 1 // 0.2')
+        tree, builder = ast.parse(r'a = 1 // 0.2')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[
@@ -77,7 +77,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_mod(self):
-        tree = ast.parse(r'a = 1 % 0.2')
+        tree, builder = ast.parse(r'a = 1 % 0.2')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[
@@ -90,7 +90,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_unary_sub(self):
-        tree = ast.parse(r'a = -1')
+        tree, builder = ast.parse(r'a = -1')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[
@@ -100,7 +100,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_exponentiation(self):
-        tree = ast.parse(r'a = 1^2')
+        tree, builder = ast.parse(r'a = 1^2')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[ExpoOp(
@@ -115,7 +115,7 @@ class ExpressionsTestCase(tests.TestCase):
     """
 
     def test_bitwise_and(self):
-        tree = ast.parse(r'a = 3&5')
+        tree, builder = ast.parse(r'a = 3&5')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[BAndOp(
@@ -126,7 +126,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_bitwise_or(self):
-        tree = ast.parse(r'a = 3|5')
+        tree, builder = ast.parse(r'a = 3|5')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[BOrOp(
@@ -137,7 +137,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_bitwise_exclusive_or(self):
-        tree = ast.parse(r'a = 3 ~ 5')
+        tree, builder = ast.parse(r'a = 3 ~ 5')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[BXorOp(
@@ -148,7 +148,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_bitwise_right_shift(self):
-        tree = ast.parse(r'a = 3 >> 5')
+        tree, builder = ast.parse(r'a = 3 >> 5')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[BShiftROp(
@@ -159,7 +159,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_bitwise_left_shirt(self):
-        tree = ast.parse(r'a = 3 << 5')
+        tree, builder = ast.parse(r'a = 3 << 5')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[BShiftLOp(
@@ -170,7 +170,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_bitwise_unary_not(self):
-        tree = ast.parse(r'a = ~5')
+        tree, builder = ast.parse(r'a = ~5')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[UBNotOp(operand=Number(5))]
@@ -182,7 +182,7 @@ class ExpressionsTestCase(tests.TestCase):
     """
 
     def test_less_than(self):
-        tree = ast.parse(r'res = (1 < 2)')
+        tree, builder = ast.parse(r'res = (1 < 2)')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[LessThanOp(
@@ -193,7 +193,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_greater_than(self):
-        tree = ast.parse(r'res = (1 > 2)')
+        tree, builder = ast.parse(r'res = (1 > 2)')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[GreaterThanOp(
@@ -204,7 +204,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_less_or_eq_than(self):
-        tree = ast.parse(r'res = (1 <= 2)')
+        tree, builder = ast.parse(r'res = (1 <= 2)')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[LessOrEqThanOp(
@@ -215,7 +215,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_greater_or_eq_than(self):
-        tree = ast.parse(r'res = (1 >= 2)')
+        tree, builder = ast.parse(r'res = (1 >= 2)')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[GreaterOrEqThanOp(
@@ -226,7 +226,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_equal_than(self):
-        tree = ast.parse(r'res = 1 == 2')
+        tree, builder = ast.parse(r'res = 1 == 2')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[EqToOp(
@@ -237,7 +237,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_not_equal_than(self):
-        tree = ast.parse(r'res = 1 ~= 2')
+        tree, builder = ast.parse(r'res = 1 ~= 2')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[NotEqToOp(
@@ -252,7 +252,7 @@ class ExpressionsTestCase(tests.TestCase):
     """
 
     def test_logic_and(self):
-        tree = ast.parse(r'res = 4 and 5')
+        tree, builder = ast.parse(r'res = 4 and 5')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[AndLoOp(
@@ -263,7 +263,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_logic_or(self):
-        tree = ast.parse(r'res = 4 or 5')
+        tree, builder = ast.parse(r'res = 4 or 5')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[OrLoOp(
@@ -274,7 +274,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_logic_not(self):
-        tree = ast.parse(r'res = not 5')
+        tree, builder = ast.parse(r'res = not 5')
         exp = Chunk(Block([Assign(
             targets=[Name('res')],
             values=[ULNotOp(operand=Number(5))]
@@ -286,7 +286,7 @@ class ExpressionsTestCase(tests.TestCase):
     ''' ----------------------------------------------------------------------- '''
 
     def test_concatenation(self):
-        tree = ast.parse(r'str = "begin".."end"')
+        tree, builder = ast.parse(r'str = "begin".."end"')
         exp = Chunk(Block([Assign(
             targets=[Name('str')],
             values=[Concat(
@@ -301,7 +301,7 @@ class ExpressionsTestCase(tests.TestCase):
     ''' ----------------------------------------------------------------------- '''
 
     def test_length_op(self):
-        tree = ast.parse(r'len = #t')
+        tree, builder = ast.parse(r'len = #t')
         exp = Chunk(Block([Assign(
             targets=[Name('len')],
             values=[ULengthOP(operand=Name('t'))]
@@ -313,7 +313,7 @@ class ExpressionsTestCase(tests.TestCase):
     ''' ----------------------------------------------------------------------- '''
 
     def test_dict(self):
-        tree = ast.parse(r'a = {foo = "bar", bar = "foo"}')
+        tree, builder = ast.parse(r'a = {foo = "bar", bar = "foo"}')
         exp = Chunk(Block([Assign(
             targets=[Name('a')],
             values=[
@@ -326,7 +326,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_nested_dict(self):
-        tree = ast.parse(textwrap.dedent(r'''
+        tree, builder = ast.parse(textwrap.dedent(r'''
             foo = {
               car = {
                 name = 'bmw'
@@ -346,7 +346,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_array(self):
-        tree = ast.parse(textwrap.dedent(r'''
+        tree, builder = ast.parse(textwrap.dedent(r'''
         foo = {
           1,    2,      4,
           8,    16,     32,
@@ -376,7 +376,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_mix_dict_array(self):
-        tree = ast.parse(textwrap.dedent(r'''
+        tree, builder = ast.parse(textwrap.dedent(r'''
         foo = {
           options = { radio = true },
           "enabled",
@@ -404,7 +404,7 @@ class ExpressionsTestCase(tests.TestCase):
     ''' ----------------------------------------------------------------------- '''
 
     def test_function_call_simple(self):
-        tree = ast.parse(r'print("hello")')
+        tree, builder = ast.parse(r'print("hello")')
         exp = Chunk(Block([Call(
             func=Name('print'),
             args=[String('\"hello\"')]
@@ -412,7 +412,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_call_no_par_string(self):
-        tree = ast.parse(r'print "hello"')
+        tree, builder = ast.parse(r'print "hello"')
         exp = Chunk(Block([Call(
             func=Name('print'),
             args=[String('\"hello\"')]
@@ -420,7 +420,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_call_no_par_table(self):
-        tree = ast.parse(r'print {}')
+        tree, builder = ast.parse(r'print {}')
         exp = Chunk(Block([Call(
             func=Name('print'),
             args=[Table([])]
@@ -428,7 +428,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_index_function_call(self):
-        tree = ast.parse(r'foo.print {}')
+        tree, builder = ast.parse(r'foo.print {}')
         exp = Chunk(Block([Call(
             func=Index(String('print'), Name('foo')),
             args=[Table([])]
@@ -436,7 +436,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_invoke(self):
-        tree = ast.parse(r'foo:print("hello")')
+        tree, builder = ast.parse(r'foo:print("hello")')
         exp = Chunk(Block([Invoke(
             source=Name('foo'),
             func=Name('print'),
@@ -445,7 +445,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_nested_invoke(self):
-        tree = ast.parse(r'foo:bar():print("hello")')
+        tree, builder = ast.parse(r'foo:bar():print("hello")')
         exp = Chunk(Block([Invoke(
             source=Invoke(
                 source=Name('foo'),
@@ -458,7 +458,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_call_args(self):
-        tree = ast.parse(r'print("hello",  42)')
+        tree, builder = ast.parse(r'print("hello",  42)')
         exp = Chunk(Block([Call(
             func=Name('print'),
             args=[String('\"hello\"'), Number(n=42)]
@@ -470,7 +470,7 @@ class ExpressionsTestCase(tests.TestCase):
     ''' ----------------------------------------------------------------------- '''
 
     def test_function_def_anonymous(self):
-        tree = ast.parse(r'f = function() local a end')
+        tree, builder = ast.parse(r'f = function() local a end')
         exp = Chunk(Block([Assign(
             targets=[Name('f')],
             values=[AnonymousFunction(
@@ -484,7 +484,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_def_global(self):
-        tree = ast.parse(r'function f() end')
+        tree, builder = ast.parse(r'function f() end')
         exp = Chunk(Block([Function(
             name=Name('f'),
             args=[],
@@ -493,7 +493,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_def_local(self):
-        tree = ast.parse(r'local function _process() end')
+        tree, builder = ast.parse(r'local function _process() end')
         exp = Chunk(Block([LocalFunction(
             name=Name('_process'),
             args=[],
@@ -502,7 +502,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_def_indexed_name_global(self):
-        tree = ast.parse(r'function t.a.b.c.f() end')
+        tree, builder = ast.parse(r'function t.a.b.c.f() end')
         exp = Chunk(Block([Function(
             name=Index(
                 idx=String('f'),
@@ -522,7 +522,7 @@ class ExpressionsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_function_def_global_assign(self):
-        tree = ast.parse(r't.a.b.c.f = function () end')
+        tree, builder = ast.parse(r't.a.b.c.f = function () end')
         exp = Chunk(Block([Assign(
             targets=[Index(
                 idx=String('f'),

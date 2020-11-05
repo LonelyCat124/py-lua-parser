@@ -14,6 +14,12 @@ from xml.dom import minidom
 class WrongNumberOfArgsError(Exception):
     pass
 
+class IllegalInvokeError(Exception):
+    pass
+
+class UnknownKernelType(Exception):
+    pass
+
 class Style(Enum):
     PYTHON = 1
     HTML = 2
@@ -110,6 +116,9 @@ class RegentStyleVisitor:
                 res += ", "
             res += self.visit(child)
             multiple_child = True
+        #In regent blocks we end things in blocks with a ;
+        if self.in_regent():
+            res += ";"
         return res
 
     @visitor(LocalAssign)
@@ -131,15 +140,19 @@ class RegentStyleVisitor:
                 res += ", "
             res += self.visit(child)
             multiple_child = True
+        #In regent blocks we end things in blocks with a ;
+        if self.in_regent():
+            res += ";"
         return res
 
     @visitor(While)
     def visit(self, node):
         res = self.indent_str()
-        res += "while " + self.visit(node.test)
+        res += "while " + self.visit(node.test) + " do"
         self.indent()
         res += self.visit(node.body)
         self.dedent()
+        res+= self.indent_str() + "end"
         return res
 
     @visitor(Do)
@@ -249,6 +262,9 @@ class RegentStyleVisitor:
             res += self.visit(child)
             multiple_args = True
         res += " )"
+        #In regent blocks we end things in blocks with a ;
+        if self.in_regent():
+            res += ";"
         return res
 
     @visitor(Invoke)
@@ -264,6 +280,9 @@ class RegentStyleVisitor:
             res += self.visit(child)
             multiple_args = True
         res += " )"
+        #In regent blocks we end things in blocks with a ;
+        if self.in_regent():
+            res += ";"
         return res
 
     @visitor(Function)
@@ -281,9 +300,49 @@ class RegentStyleVisitor:
         self.indent()
         res += self.visit(node.body)
         self.dedent()
-        res += self.indent_str() + "end"
+        res += self.indent_str() + "end\n"
         return res
-        
+    
+    @visitor(DSL_main)
+    def visit(self, node):
+        self.enter_regent()
+        res = self.indent_str() + "task main()\n"
+        self.indent()
+        res += self.indent_str() + "[initialisation_function(variables, 256, 1.0, 1.0, 1.0)];\n"
+#        res += self.indent_str() + "[simple_hdf5_module.initialisation( input_file, hdf5_read_mapper, variables, x_cell, y_cell, z_cell)];\n"
+        res += self.indent_str() + "[neighbour_init.initialise(variables)];\n"
+        res += self.indent_str() + "[neighbour_init.update_cells(variables)];\n"
+        res += self.visit(node.body)
+        self.dedent()
+        res += self.indent_str() + "end\n"
+        self.leave_regent()
+        return res
+
+    @visitor(DSL_invoke)
+    def visit(self, node):
+        if not self.in_regent():
+            print("Attempted to call DSL_invoke outside of DSL code")
+            raise IllegalInvokeError
+        res = self.indent_str()
+        args = node.args
+        kernel_store = node.kernel_store
+        res += "[invoke(variables.config"
+        #Deal with args
+        for arg in args:
+            name = arg.id
+            if name in kernel_store.kernels:
+                res += ", {" + name + ", PER_PART }"
+            elif name in kernel_store.symmetric_kernels:
+                res += ", {" + name + ", SYMMETRIC_PAIRWISE }"
+            elif name in kernel_store.asymmetric_kernels:
+                res += ", {" + name + ", ASYMMETRIC_PAIRWISE }"
+            else:
+                print("UNKNOWN KERNEL TYPE")
+                raise UnknownKernelType
+
+        res += ", NO_BARRIER)];"
+        return res
+
     @visitor(Kernel)
     def visit(self, node):
         self.enter_regent()
@@ -378,6 +437,9 @@ class RegentStyleVisitor:
 
     @visitor(Particle_Type)
     def visit(self, node):
+        #We only print the particle type in advance
+        if node.printed:
+            return ""
         res = self.indent_str() + "fspace part {"
         self.indent()
         res += self.indent_str() + "core_part_space : core_part,"
@@ -385,6 +447,8 @@ class RegentStyleVisitor:
         res += self.visit(node.fspaces)
         self.dedent()
         res += self.indent_str() + "}\n"
+        #We now printed this so mark it
+        node.printed = True
         return res
 
     @visitor(LocalFunction)

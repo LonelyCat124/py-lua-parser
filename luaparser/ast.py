@@ -7,13 +7,14 @@ from luaparser.builder import Builder
 from luaparser.utils.visitor import *
 from antlr4.error.ErrorListener import ErrorListener
 import json
-from typing import Generator
+from typing import Generator, Tuple
 
 
-def parse(source: str) -> Chunk:
+def parse(source: str) -> Tuple[Chunk, Builder]:
     """ Parse Lua source to a Chunk.
     """
-    return Builder(source).process()
+    buildy = Builder(source)
+    return buildy.process(), buildy
 
 
 def get_token_stream(source: str) -> CommonTokenStream:
@@ -249,6 +250,42 @@ class WalkVisitor:
         self.visit(node.args)
         self.visit(node.body)
 
+    @visitor(Kernel)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.name)
+        self.visit(node.args)
+        self.visit(node.body)
+
+    @visitor(Symmetric_Pairwise_Kernel)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.name)
+        self.visit(node.args)
+        self.visit(node.body)
+
+    @visitor(Asymmetric_Pairwise_Kernel)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.name)
+        self.visit(node.args)
+        self.visit(node.body)
+
+    @visitor(DSL_main)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.body)
+
+    @visitor(DSL_invoke)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.args)
+
+    @visitor(Particle_Type)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.fspaces)
+
     @visitor(LocalFunction)
     def visit(self, node):
         self._nodes.append(node)
@@ -339,8 +376,18 @@ class WalkVisitor:
 
     @visitor(SemiColon)
     def visit(self, node):
-        self._nodes.append(node)
+        self._nodes.append(node)    
 
+    @visitor(RegentType)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.type_name)
+
+    @visitor(Fspace)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.name)
+        self.visit(node.regent_type)
 
 class SyntaxException(Exception):
     pass
