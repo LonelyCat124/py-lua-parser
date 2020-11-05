@@ -10,7 +10,7 @@ class AstTestCase(tests.TestCase):
         src = textwrap.dedent("""
             local a = 1
             """)
-        tree = ast.parse(src)
+        tree, builder = ast.parse(src)
         chunk, block, local, name, number = False, False, False, False, False
         for node in ast.walk(tree):
             if isinstance(node, Chunk): chunk = True
@@ -36,7 +36,7 @@ class AstTestCase(tests.TestCase):
                 nonlocal called
                 called = True
 
-        tree = ast.parse(src)
+        tree, builder = ast.parse(src)
         NumberVisitor().visit(tree)
         self.assertTrue(called)
 
@@ -49,7 +49,7 @@ class AstTestCase(tests.TestCase):
 
     # Cant walk the ast tree if lua file has semicolon(;) or repeat until loop and multiple args(...) #9
     def test_cont_int_1(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             function table.pack(...)
                 repeat
                    print("value of a:", a)

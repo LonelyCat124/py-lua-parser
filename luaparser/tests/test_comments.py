@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(levelname)s:\t%(message)s')
 
 class CommentsTestCase(tests.TestCase):
     def test_comment_before_local_assign(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             -- rate limit
             -- an other comment
             --[==[ a long
@@ -31,7 +31,7 @@ class CommentsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_comment_before_global_assign(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             -- rate limit
             rate_limit = 192
             """))
@@ -45,7 +45,7 @@ class CommentsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_comment_before_method(self):
-        tree = ast.parse(textwrap.dedent("""       
+        tree, builder = ast.parse(textwrap.dedent("""       
             --- description
             --- @tparam string arg a string
             function Class:print(arg)
@@ -63,7 +63,7 @@ class CommentsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_comment_in_table(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             --- @table a table of constants
             local limits = {
               -- pre field 1
@@ -95,7 +95,7 @@ class CommentsTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_comment_in_table_2(self):
-        tree = ast.parse(textwrap.dedent("""
+        tree, builder = ast.parse(textwrap.dedent("""
             --- @module utils
 
             return {

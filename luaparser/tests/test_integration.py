@@ -6,7 +6,7 @@ import textwrap
 
 class IntegrationTestCase(tests.TestCase):
     def test_cont_int_1(self):
-        tree = ast.parse(textwrap.dedent(r'''
+        tree, builder = ast.parse(textwrap.dedent(r'''
         describe("", function()
           it(function()
             do
@@ -41,7 +41,7 @@ class IntegrationTestCase(tests.TestCase):
         self.assertEqual(exp, tree)
 
     def test_cont_int_2(self):
-        tree = ast.parse(textwrap.dedent(r'''
+        tree, builder = ast.parse(textwrap.dedent(r'''
         if true then
           return true
         elseif isinstance() then
@@ -62,14 +62,14 @@ class IntegrationTestCase(tests.TestCase):
 
     # Unable to tell apart true indexing vs. syntactic sugar indexing #1
     def test_cont_int_3(self):
-        tree = ast.parse(textwrap.dedent(r'x[a]'))
+        tree, builder = ast.parse(textwrap.dedent(r'x[a]'))
         exp = Chunk(Block([Index(idx=Name('a'), value=Name('x'))]))
         self.assertEqual(exp, tree)
 
-        tree = ast.parse(textwrap.dedent(r'''x['a']'''))
+        tree, builder = ast.parse(textwrap.dedent(r'''x['a']'''))
         exp = Chunk(Block([Index(idx=String('\'a\''), value=Name('x'))]))
         self.assertEqual(exp, tree)
 
-        tree = ast.parse(textwrap.dedent(r'x.a'))
+        tree, builder = ast.parse(textwrap.dedent(r'x.a'))
         exp = Chunk(Block([Index(idx=String('a'), value=Name('x'))]))
         self.assertEqual(exp, tree)
