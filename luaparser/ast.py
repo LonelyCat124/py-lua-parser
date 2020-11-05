@@ -250,6 +250,42 @@ class WalkVisitor:
         self.visit(node.args)
         self.visit(node.body)
 
+    @visitor(Kernel)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.name)
+        self.visit(node.args)
+        self.visit(node.body)
+
+    @visitor(Symmetric_Pairwise_Kernel)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.name)
+        self.visit(node.args)
+        self.visit(node.body)
+
+    @visitor(Asymmetric_Pairwise_Kernel)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.name)
+        self.visit(node.args)
+        self.visit(node.body)
+
+    @visitor(DSL_main)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.body)
+
+    @visitor(DSL_invoke)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.args)
+
+    @visitor(Particle_Type)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.fspaces)
+
     @visitor(LocalFunction)
     def visit(self, node):
         self._nodes.append(node)
@@ -340,8 +376,18 @@ class WalkVisitor:
 
     @visitor(SemiColon)
     def visit(self, node):
-        self._nodes.append(node)
+        self._nodes.append(node)    
 
+    @visitor(RegentType)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.type_name)
+
+    @visitor(Fspace)
+    def visit(self, node):
+        self._nodes.append(node)
+        self.visit(node.name)
+        self.visit(node.regent_type)
 
 class SyntaxException(Exception):
     pass

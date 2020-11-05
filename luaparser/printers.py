@@ -306,11 +306,12 @@ class RegentStyleVisitor:
     @visitor(DSL_main)
     def visit(self, node):
         self.enter_regent()
-        res = self.indent_str() + "task main()"
-        res += self.indent_str() + "[simple_hdf5_module.initialisation( input_file, hdf5_read_mapper, variables, x_cell, y_cell, z_cell)];\n"
+        res = self.indent_str() + "task main()\n"
+        self.indent()
+        res += self.indent_str() + "[initialisation_function(variables, 256, 1.0, 1.0, 1.0)];\n"
+#        res += self.indent_str() + "[simple_hdf5_module.initialisation( input_file, hdf5_read_mapper, variables, x_cell, y_cell, z_cell)];\n"
         res += self.indent_str() + "[neighbour_init.initialise(variables)];\n"
         res += self.indent_str() + "[neighbour_init.update_cells(variables)];\n"
-        self.indent()
         res += self.visit(node.body)
         self.dedent()
         res += self.indent_str() + "end\n"
