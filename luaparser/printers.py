@@ -20,13 +20,604 @@ class IllegalInvokeError(Exception):
 class UnknownKernelType(Exception):
     pass
 
+class Illegal_C_Conversion_Error(Exception):
+    pass
+
 class Style(Enum):
     PYTHON = 1
     HTML = 2
     REGENT = 3
 
+class CStyleVisitor():
+    def __init__(self, indent):
+        self.indentValue = indent
+        self.currentIndent = 0
+        self.currentArgs = {}
+        self.functions = {}
 
-###FIXME CURRENTLY NO INDENTATION OR DIFFERENTIATION BETWEEN REGENT AND LUA CODE SECTIONS
+    @visitor(str)
+    def visit(self, node):
+        return node.strip()
+
+    @visitor(float)
+    def visit(self, node):
+        return str(node)
+
+    @visitor(int)
+    def visit(self, node):
+        return str(node)
+
+    def indent_str(self, newLine=True):
+        res = ' ' * self.currentIndent
+        if newLine:
+            res = '\n' + res
+        return res
+
+    def indent(self):
+        self.currentIndent += self.indentValue
+
+    def dedent(self):
+        self.currentIndent -= self.indentValue
+
+
+    @visitor(list)
+    def visit(self, obj):
+        res = ''
+        k = 0
+        for itemValue in obj:
+            if type(itemValue) == Call:
+                res += self.indent_str()
+            res += self.visit(itemValue)
+        return res
+
+###
+### Left-Hand Side Expression
+###
+    @visitor(Name)
+    def visit(self, node):
+        return node.id
+
+    @visitor(Index)
+    def visit(self, node):
+        value = self.visit(node.value)
+        string = self.visit(node.idx)
+        if string.startswith('"') and string.endswith('"'):
+            raise Illegal_C_Conversion_Error
+        else:
+            res = value + "." + string
+        return res
+
+###
+### Statements
+###
+
+    @visitor(Assign)
+    def visit(self, node):
+        res = ""
+        if len(node.targets) != len(node.values):
+            raise Illegal_C_Conversion_Error
+        for target, value in zip(node.targets, node.values):
+            res += self.indent_str() + self.visit(target) + " = " + self.visit(value) + ";"
+        return res
+
+    @visitor(LocalAssign)
+    def visit(self, node):
+        res = ""
+        if len(node.targets) != len(node.values):
+            raise Illegal_C_Conversion_Error
+        for target, value in zip(node.targets, node.values):
+            res += self.indent_str() + "TYPEGUESS " +  self.visit(target) + " = " + self.visit(value) + ";"
+        return res
+
+    @visitor(While)
+    def visit(self, node):
+        res = self.indent_str()
+        res += "while (" + self.visit(node.test) + ") {"
+        self.indent()
+        res += self.visit(node.body)
+        self.dedent()
+        res+= self.indent_str() + "}"
+        return res
+
+    @visitor(Do)
+    def visit(self, node):
+        res = "{"
+        self.indent()
+        res += self.visit(node.body)
+        seld.dedent()
+        res += self.indent_str() + "}"
+        return res
+
+    @visitor(Repeat)
+    def visit(self, node):
+        res = "do {"
+        self.indent()
+        res += self.visit(node.body)
+        self.dedent()
+        res += self.indent_str() + "} while(" + self.visit(node.test) + ");\n"
+        return res
+
+    @visitor(ElseIf)
+    def visit(self, node):
+        res = self.indent_str() + "} else if (" + self.visit(node.test) + ") {"
+        self.indent()
+        res += self.visit(node.body)
+        self.dedent()
+        if node.orelse != None:
+            res += self.visit(node.orelse)
+        return res
+
+    @visitor(If)
+    def visit(self, node):
+        res = self.indent_str() + "if (" + self.visit(node.test) + ") {"
+        self.indent()
+        res += self.visit(node.body)
+        self.dedent()
+        if node.orelse != None:
+            res += self.visit(node.orelse)
+        res += self.indent_str() + "}"
+        return res
+
+    @visitor(Label)
+    def visit(self, node):
+        res = self.indent_str() +  self.visit(node.id)+":"
+        return res
+
+    @visitor(Goto)
+    def visit(self, node):
+        print("WARNING GOTO STATEMENT DETECTED. THIS IS NOT RECOMMENDED")
+        res = self.indent_str() + "goto " + self.visit(node.label) + ";"
+        return res
+
+    @visitor(SemiColon)
+    def visit(self, node):
+        res = ";"
+        return res
+
+    @visitor(Break)
+    def visit(self, node):
+        res = self.indent_str() + "break;"
+        return res
+
+    @visitor(Return)
+    def visit(self, node):
+        res = self.indent_str() + "return " + self.visit(node.values) + ";"
+        return res
+
+    @visitor(Fornum)
+    def visit(self, node):
+        ##Step is always part of the AST
+        res = self.indent_str()
+        res += "for ( int " + self.visit(node.target) + "= " + self.visit(node.start) + "; "
+        res += self.visit(node.target) + " < " + self.visit(node.stop) + "; "
+        res += self.visit(node.target) + " = " + self.visit(node.target) + " + " + self.visit(node.step) + ") {"
+        if self.visit(node.step) < 0:
+            print("NYI negative step loops")
+            raise Illegal_C_Conversion_Error
+        self.indent()
+        res += self.visit(node.body)
+        self.dedent()
+        res += self.indent_str() + "}"
+        return res
+
+    @visitor(Forin)
+    def visit(self, node):
+        raise Illegal_C_Conversion_Error
+
+    @visitor(Call)
+    def visit(self, node):
+        res = self.visit(node.func)
+        res += "( "
+        multiple_args = False
+        for child in node.args:
+            if multiple_args:
+                res += " , "
+            res += self.visit(child)
+            multiple_args = True
+        res += " )"
+        #In regent blocks we end things in blocks with a ;
+        res += ";"
+        return res
+
+    @visitor(Invoke)
+    def visit(self, node):
+        return ""
+
+    @visitor(Function)
+    def visit(self, node):
+        ##Functions are just inlined for C outputs.
+        ##NYI at the call point
+        self.functions[self.visit(node.name)] = node
+        return ""
+
+    @visitor(Function)
+    def visit(self, node):
+        ##Functions are just inlined for C outputs.
+        ##NYI at the call point
+        self.functions[self.visit(node.name)] = node
+        return ""
+
+    @visitor(DSL_main)
+    def visit(self, node):
+        res = self.indent_str() + "void main() {\n"
+        self.indent()
+#        res += self.indent_str() + "[initialisation_function(variables, 256, 1.0, 1.0, 1.0)];\n"
+#        res += self.indent_str() + "[simple_hdf5_module.initialisation( input_file, hdf5_read_mapper, variables, x_cell, y_cell, z_cell)];\n"
+#        res += self.indent_str() + "[neighbour_init.initialise(variables)];\n"
+#        res += self.indent_str() + "[neighbour_init.update_cells(variables)];\n"
+        res += self.indent_str() + "initialise(256, 1.0, 1.0, 1.0);\n"
+        res += self.visit(node.body)
+        self.dedent()
+        res += self.indent_str() + "}\n"
+        return res
+
+    @visitor(DSL_invoke)
+    def visit(self, node):
+        res = ""#self.indent_str()
+        args = node.args
+        kernel_store = node.kernel_store
+        #Deal with args
+        for arg in args:
+            name = arg.id
+            if name in kernel_store.kernels:
+                res += self.indent_str() + "invoke_per_part(name);"
+            elif name in kernel_store.symmetric_kernels:
+                res += self.indent_str() + "invoke_symmetric(name);"
+            elif name in kernel_store.asymmetric_kernels:
+                res += self.indent_str() + "invoke_asymmetric(name);"
+            else:
+                print("UNKNOWN KERNEL TYPE")
+                raise UnknownKernelType
+
+        return res
+
+    @visitor(Kernel)
+    def visit(self, node):
+        res = self.indent_str() + "void "
+        res += self.visit(node.name)
+        res += "( "
+        multiple_args = False
+        args = 0
+        for child in node.args:
+            if multiple_args:
+                res += ", "
+            if args < 1:
+                res += " struct part * "
+            else:
+                res += " struct config * "
+            res += self.visit(child)
+            multiple_args = True
+            args = args + 1
+        if args != 2:
+            raise WrongNumberOfArgsError()
+        res += " ) {"
+        self.indent()
+        ##We know how many arguments the Kernel should have, so we can explicitly check that here.
+        ##We know the format of the body should be a set of statements, followed by end
+        res += self.visit(node.body)
+        self.dedent()
+        res += "\n" + self.indent_str() + " }\n"
+        return res
+
+    @visitor(Symmetric_Pairwise_Kernel)
+    def visit(self, node):
+        res = self.indent_str() + "void "
+        res += self.visit(node.name)
+        res += "( "
+        multiple_args = False
+        args = 0
+        for child in node.args:
+            if multiple_args:
+                res += ", "
+            if args < 2:
+                res += " struct part * "
+            else:
+                res += " double "
+            res += self.visit(child)
+            multiple_args = True
+            args = args + 1
+        if args != 3:
+            raise WrongNumberOfArgsError()
+        res += " ) {"
+        self.indent()
+        ##We know how many arguments the Kernel should have, so we can explicitly check that here.
+        ##We know the format of the body should be a set of statements, followed by end
+        res += self.visit(node.body)
+        self.dedent()
+        res += "\n" + self.indent_str() + " }\n"
+        return res
+
+    @visitor(Asymmetric_Pairwise_Kernel)
+    def visit(self, node):
+        res = self.indent_str() + "void "
+        res += self.visit(node.name)
+        res += "( "
+        multiple_args = False
+        args = 0
+        for child in node.args:
+            if multiple_args:
+                res += ", "
+            if args < 2:
+                res += " struct part * "
+            else:
+                res += " double "
+            res += self.visit(child)
+            multiple_args = True
+            args = args + 1
+        if args != 3:
+            raise WrongNumberOfArgsError()
+        res += " ) {"
+        self.indent()
+        ##We know how many arguments the Kernel should have, so we can explicitly check that here.
+        ##We know the format of the body should be a set of statements, followed by end
+        res += self.visit(node.body)
+        self.dedent()
+        res += "\n" + self.indent_str() + " }\n"
+        return res
+
+    @visitor(Particle_Type)
+    def visit(self, node):
+        #We only print the particle type in advance
+        if node.printed:
+            return ""
+        res = self.indent_str() + "struct part {"
+        self.indent()
+        res += self.indent_str() + "struct core_part core_part_space;"
+        res += self.indent_str() + "struct neighbour_part neighbour_part_space;"
+        res += self.visit(node.fspaces)
+        self.dedent()
+        res += self.indent_str() + "};\n"
+        #We now printed this so mark it
+        node.printed = True
+        return res
+
+    @visitor(Method)
+    def visit(self, node):
+        raise Illegal_C_Conversion_Error
+
+    @visitor(Statement)
+    def visit(self, node):
+        print(f"Found unknown statement type: {type(node)}")
+        raise NotImplementedError()
+
+###
+### Expressions
+###
+    @visitor(TrueExpr)
+    def visit(self, node):
+        res = " 1 "
+        return res
+
+    @visitor(FalseExpr)
+    def visit(self, node):
+        res =  " 0 "
+        return res
+
+    @visitor(Number)
+    def visit(self, node):
+        return self.visit(node.n)
+
+    @visitor(Varargs)
+    def visit(self, node):
+        raise Illegal_C_Conversion_Error
+
+    @visitor(String)
+    def visit(self, node):
+        res = self.visit(node.s)
+        return res
+
+    @visitor(Field)
+    def visit(self, node):
+        res = ""
+        if node.between_brackets:
+            print("WARNING - AST found a Field with between_brackets true - this may not generate correct code")
+        res = self.visit(node.value)
+        return res
+
+    @visitor(Table)
+    def visit(self, node):
+        raise Illegal_C_Conversion_Error
+
+    @visitor(Dots)
+    def visit(self, node):
+        raise Illegal_C_Conversion_Error
+
+    @visitor(AnonymousFunction)
+    def visit(self, node):
+        raise Illegal_C_Conversion_Error
+
+    @visitor(Comment)
+    def visit(self, node):
+        ##Is multiline comment
+        res = ""
+        if node.is_multi_line:
+            res = self.indent_str(false) + "/*"
+        else:
+            res = self.indent_str(false) + "//"
+        res += node.s
+        if node.is_multi_line:
+            res += "\n" + self.indent_str(false) + "*\\\n"
+
+###
+### Binary Operators - i.e. A OP B
+###
+
+    @visitor(AddOp)
+    def visit(self, node):
+       res = self.visit(node.left) + " + " + self.visit(node.right)
+       return res
+
+    @visitor(SubOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " - " + self.visit(node.right)
+        return res
+
+    @visitor(MultOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " * " + self.visit(node.right)
+        return res
+
+    @visitor(FloatDivOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " \\ " + self.visit(node.right)
+        return res
+
+    @visitor(FloorDivOp)
+    def visit(self, node):
+        res = "floor(" + self.visit(node.left) + " \\" + self.visit(node.right) + ")"
+        return res
+
+    @visitor(ModOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " % " + self.visit(node.right)
+        return res
+
+    @visitor(ExpoOp)
+    def visit(self, node):
+        res = "expf(" + self.visit(node.left) + " , " + self.visit(node.right) + ")"
+        return res
+
+    @visitor(BAndOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " & " + self.visit(node.right)
+        return res
+
+    @visitor(BOrOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " | " + self.visit(node.right)
+        return res
+
+    @visitor(BXorOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " ^ " + self.visit(node.right)
+        return res
+
+    @visitor(BShiftROp)
+    def visit(self, node):
+        res = self.visit(node.left) + " >> " + self.visit(node.right)
+        return res
+
+    @visitor(BShiftLOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " << " + self.visit(node.right)
+        return res
+
+    @visitor(LessThanOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " < " + self.visit(node.right)
+        return res
+
+    @visitor(GreaterThanOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " > " + self.visit(node.right)
+        return res
+
+    @visitor(LessOrEqThanOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " <= " + self.visit(node.right)
+        return res
+
+    @visitor(GreaterOrEqThanOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " >= " + self.visit(node.right)
+        return res
+
+    @visitor(EqToOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " == " + self.visit(node.right)
+        return res
+
+    @visitor(NotEqToOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " ~= " + self.visit(node.right)
+        return res
+
+    @visitor(AndLoOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " && " + self.visit(node.right)
+        return res
+
+    @visitor(OrLoOp)
+    def visit(self, node):
+        res = self.visit(node.left) + " || " + self.visit(node.right)
+        return res
+
+    @visitor(Concat)
+    def visit(self, node):
+        raise Illegal_C_Conversion_Error
+
+    @visitor(BinaryOp)
+    def visit(self, node):
+        print(f"{type(node)} Not implemented in Regent codegen")
+        raise NotImplementedError()
+
+###
+### Unary Operators
+###
+    @visitor(UMinusOp)
+    def visit(self, node):
+        res = " -"+self.visit(node.operand)
+        return res
+
+    @visitor(UBNotOp)
+    def visit(self, node):
+        res = " ~" + self.visit(node.operand)
+        return res
+
+    @visitor(ULNotOp)
+    def visit(self, node):
+        res = " !" + self.visit(node.operand)
+        return res
+
+###
+### Length Operator
+###
+    @visitor(ULengthOP)
+    def visit(self, node):
+        raise Illegal_C_Conversion_Error
+
+    @visitor(UnaryOp)
+    def visit(self, node):
+        print(f"{type(node)} Not implemented in Regent codegen")
+        raise NotImplementedError()
+
+###
+### Unknown Operator
+###
+    @visitor(Op)
+    def visit(self, node):
+        print(f"{type(node)} Not implemented in Regent codegen")
+        raise NotImplementedError()
+
+### Nodes required for particle type declaration
+    @visitor(RegentType)
+    def visit(self, node):
+        return node.type_name
+
+    @visitor(Fspace)
+    def visit(self, node):
+        res = self.indent_str()
+        res += self.visit(node.regent_type) +" " +  node.name + ";"
+        return res
+
+## Block/Chunk which just recurse.
+    @visitor(Node)
+    def visit(self, node):
+        res = ""
+        comments = node.comments
+        if comments:
+            for c in comments:
+                res += self.visit(c)
+
+        for attr, attrValue in node.__dict__.items():
+            if not attr.startswith(('_', 'comments')):
+                if isinstance(attrValue, Node) or isinstance(attrValue, list):
+                    res += self.visit(attrValue)
+        return res
+
+###
+### REGENT STYLE VISITOR
+###
 class RegentStyleVisitor:
     def __init__(self, indent):
         self.indentValue = indent
@@ -91,7 +682,7 @@ class RegentStyleVisitor:
         value = self.visit(node.value)
         string = self.visit(node.idx)
         if string.startswith('"') and string.endswith('"'):
-            res = value + '[' + string + ']'
+            raise SyntaxError
         else:
             res = value + "." + string
         return res

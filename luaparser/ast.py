@@ -39,6 +39,9 @@ def walk(root: Node) -> Generator[None, Node, None]:
 def to_pretty_str(root: Node, indent=2) -> str:
     return printers.PythonStyleVisitor(indent).visit(root)
 
+def to_c_str(root: Node, indent=4) -> str:
+    return printers.CStyleVisitor(indent).visit(root)
+
 def to_lua_str(root: Node, indent=4) -> str:
     return printers.RegentStyleVisitor(indent).visit(root)
 
